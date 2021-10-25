@@ -1,0 +1,20 @@
+# build folders
+/build
+/*.egg-info
+
+# data files
+/data/*
+/out/*
+!**/.gitkeep
+
+# documents
+/docs
+
+# ide files
+/.vscode
+
+# test files
+**/__pycache__
+
+# virtual environments
+/.venv
