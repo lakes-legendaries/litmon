@@ -1,7 +1,13 @@
+"""Query PubMed Articles
+
+This module has a command-line interface and an API
+"""
+
 from __future__ import annotations
 
 from argparse import ArgumentParser
 from datetime import datetime
+from logging import basicConfig, info, INFO
 from typing import Iterator
 
 from retry import retry
@@ -33,6 +39,9 @@ class PubMedInterface:
     email: str, optional, default='mike@lakeslegendaries.com'
         email of the user of this program.
         this is required by the pubmed api
+    log_fname: str, optional, default=out/query.log
+        file to log progress to.
+        Set to :code:`None` to turn off logging
     tool: str, optional, default='org.mfoundation.litmon'
         name of the program running this query.
         this is required by the pubmed api
@@ -46,6 +55,7 @@ class PubMedInterface:
         end_date: str,
         *,
         email: str = 'mike@lakeslegendaries.com',
+        log_fname: str = 'out/query.log',
         tool: str = 'org.mfoundation.litmon',
     ):
         # initialize tool
@@ -64,12 +74,26 @@ class PubMedInterface:
 
         # save other parameters
         self._fname = fname
+        self._query = query
         self._start_date = datetime.strptime(start_date, '%Y/%m/%d')
         self._end_date = datetime.strptime(end_date, '%Y/%m/%d')
-        self._query = query
+        self._log_fname = log_fname
 
     def run_query(self):
         """Run PubMed query, saving results to file"""
+
+        # setup logger
+        if self._log_fname is not None:
+
+            # clear out existing file
+            with open(self._log_fname, 'w'):
+                pass
+
+            # set basic logging parameters
+            basicConfig(
+                filename=self._log_fname,
+                level=INFO,
+            )
 
         # clear output file
         with open(self._fname, 'w'):
@@ -107,6 +131,10 @@ class PubMedInterface:
                         mode='a',
                     )
 
+                    # write running status
+                    if self._log_fname is not None:
+                        info(f' {datestr}: {articles.shape[0]:4d} articles')
+
     def _single_query(self, datestr: str, /, **kwargs) -> DataFrame:
         """Run query for a single date
 
@@ -135,6 +163,8 @@ class PubMedInterface:
             [
                 [
                     getattr(result, field)
+                    if hasattr(result, field)
+                    else ''
                     for field in self._header
                 ]
                 for result in results
@@ -188,7 +218,7 @@ class PubMedInterface:
 if __name__ == '__main__':
 
     # parse arguments
-    parser = ArgumentParser('Batch-query PubMed Articles')
+    parser = ArgumentParser('Batch-Query PubMed Articles')
     parser.add_argument(
         '-c',
         '--config_fname',
