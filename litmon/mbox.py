@@ -4,8 +4,11 @@ from __future__ import annotations
 
 from argparse import ArgumentParser
 import re
+from typing import Any
 
+from nptyping import NDArray
 from numpy import unique
+import yaml
 
 
 class PubMedIDExtractor:
@@ -20,7 +23,7 @@ class PubMedIDExtractor:
 
     Attributes
     ----------
-    pmid: list[str]
+    pmids: NDArray of shape(num_articles,) of type str
         PubMed ids
     """  # noqa
 
@@ -33,15 +36,15 @@ class PubMedIDExtractor:
     ):
 
         # initialize attribute
-        self.pmid: list[str] = []
+        ids: list[str] = []
 
         # parse dadta
         for line in data:
             for pmid in re.findall(pattern, line):
-                self.pmid.append(pmid)
+                ids.append(pmid)
 
         # get unique
-        self.pmid = list(unique(self.pmid))
+        self.pmids: NDArray[(Any,), str] = unique(ids)
 
     def to_file(self, fname: str, /):
         """Write PubMed ids to file
@@ -52,7 +55,7 @@ class PubMedIDExtractor:
             file to write to
         """
         with open(fname, 'w') as file:
-            for line in self.pmid:
+            for line in self.pmids:
                 print(line, file=file)
 
 
@@ -62,22 +65,24 @@ if __name__ == '__main__':
     # parse command-line arguments
     parser = ArgumentParser('Extract PubMed IDs from mbox email dumps')
     parser.add_argument(
-        '-i',
-        '--ifname',
-        help='Input filename (mbox file)',
-    )
-    parser.add_argument(
-        '-o',
-        '--ofname',
-        help='Output filename (txt file containing pmids)',
+        '-c',
+        '--config_fname',
+        default='config/litmon.yaml',
+        help='Configuration yaml file. '
+             'See the docs for details. ',
     )
     args = parser.parse_args()
 
-    # load mbox
-    data = open(args.ifname, 'r').readlines()
+    # load configuration
+    config = yaml.safe_load(open(args.config_fname, 'r'))
+
+    # load mboxes
+    mbox = []
+    for fname in config['fname']['mbox']:
+        mbox.extend(open(fname, 'r').readlines())
 
     # extract ids
-    extractor = PubMedIDExtractor(data)
+    extractor = PubMedIDExtractor(mbox, **config['kwargs']['mbox'])
 
     # write results to file
-    extractor.to_file(args.ofname)
+    extractor.to_file(config['fname']['pmids'])

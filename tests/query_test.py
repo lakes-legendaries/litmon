@@ -1,24 +1,24 @@
-from litmon import PubMedInterface
+from litmon import PubMedQuerier
 
 
-def test_single_query():
+def test():
 
     # run query
-    pmi = PubMedInterface(
-        fname=None,
-        query='aging',
-        start_date='2020/01/01',
-        end_date='2020/01/01',
-    )
-    df = pmi._single_query('2020/02/12')
+    querier = PubMedQuerier(max_results=30)
+    results, dates = querier.query('(cancer) AND (2020/01/01 [edat])')
 
-    # check mostly filled out
-    assert((df['title'] == '').mean() < 0.05)
-    assert((df['abstract'] == '').mean() < 0.05)
+    # check results
+    assert(results.shape[0] == 30)
+    assert(dates.shape[0] == 30)
+    assert(all([d.year == 2020 for d in dates]))
+    assert(all([d.month == 1 for d in dates]))
+    assert(all([d.day == 1 for d in dates]))
+    assert(querier._count == 30)
 
-    # check many articles
-    assert(df.shape[0] > 100)
+    # check running count
+    results, dates = querier.query('(cancer) AND (2020/01/02 [edat])')
+    assert(querier._count == 60)
 
 
 if __name__ == '__main__':
-    test_single_query()
+    test()

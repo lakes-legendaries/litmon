@@ -1,61 +1,46 @@
-"""Query PubMed Articles
-
-This module has a command-line interface and an API
-"""
+"""Base class for querying PubMed articles"""
 
 from __future__ import annotations
 
-from argparse import ArgumentParser
-from datetime import datetime
-from logging import basicConfig, info, INFO
-from typing import Iterator
+from datetime import date
+from typing import Any
 
+from nptyping import NDArray
+from numpy import array, NaN
 from retry import retry
 from pandas import DataFrame
 from pymed import PubMed
 from pymed.article import PubMedArticle
-import yaml
 
 
-class PubMedInterface:
-    """Easy interface to batch-query PubMed articles
+class PubMedQuerier:
+    """Base class for querying PubMed articles
 
-    This class lets you build a large database of articles by running the same
-    query for many different dates (e.g. all articles matching :code:`query`
-    from 2011 through 2016).
+    This class is designed for building large datasets: After each query, the
+    resulting articles are appended to file.
 
     Parameters
     ----------
-    fname: str
-        fname of output file
-    query: str
-        pubmed query (excluding dates)
-    start_date: str
-        start date for query, in YYYY/MM/DD format.
-        range of dates is :code:`[start_date, end_date)`
-    end_date: str
-        end date, in YYYY/MM/DD format.
-        range of dates is :code:`[start_date, end_date)`
+    fname: str, optional
+        name of output file.
+        If None, then don't append results to file
     email: str, optional, default='mike@lakeslegendaries.com'
         email of the user of this program.
-        this is required by the pubmed api
-    log_fname: str, optional, default=out/query.log
-        file to log progress to.
-        Set to :code:`None` to turn off logging
+        this is required by the PubMed api
+    max_results: int, optional, default=1000
+        Maximum number of PubMed articles retrieved in any single query.
+        Required by the :code:`pymed.PubMed` tool
     tool: str, optional, default='org.mfoundation.litmon'
         name of the program running this query.
-        this is required by the pubmed api
+        this is required by the PubMed api
     """
     def __init__(
         self,
         /,
-        fname: str,
-        query: str,
-        start_date: str,
-        end_date: str,
+        fname: str = None,
         *,
         email: str = 'mike@lakeslegendaries.com',
-        log_fname: str = 'out/query.log',
+        max_results: int = 1000,
         tool: str = 'org.mfoundation.litmon',
     ):
         # initialize tool
@@ -72,122 +57,24 @@ class PubMedInterface:
             and field[0] != '_'
         ]
 
-        # save other parameters
-        self._fname = fname
-        self._query = query
-        self._start_date = datetime.strptime(start_date, '%Y/%m/%d')
-        self._end_date = datetime.strptime(end_date, '%Y/%m/%d')
-        self._log_fname = log_fname
-
-    def run_query(self):
-        """Run PubMed query, saving results to file"""
-
-        # setup logger
-        if self._log_fname is not None:
-
-            # clear out existing file
-            with open(self._log_fname, 'w'):
-                pass
-
-            # set basic logging parameters
-            basicConfig(
-                filename=self._log_fname,
-                level=INFO,
-            )
-
-        # clear output file
-        with open(self._fname, 'w'):
-            pass
-
         # write file header
-        DataFrame([], columns=self._header).to_csv(self._fname, index=False)
+        if fname is not None:
+            DataFrame([], columns=self._header).to_csv(fname)
 
-        # run query for each date
-        for year in range(self._start_date.year, self._end_date.year + 1):
-            for month in range(1, 13):
-                for day in range(1, 32):
+        # save parameters
+        self._fname = fname
+        self._max_results = max_results
 
-                    # check if date is a valid day
-                    try:
-                        datestr = f'{year:4d}/{month:02d}/{day:02d}'
-                        date = datetime.strptime(datestr, '%Y/%m/%d')
-                    except ValueError:
-                        continue
+        # initialize count of articles
+        self._count = 0
 
-                    # check if date is in range
-                    if date < self._start_date:
-                        continue
-                    if date >= self._end_date:
-                        return
-
-                    # run query for this date
-                    articles = self._single_query(datestr)
-
-                    # write articles to file
-                    articles.to_csv(
-                        self._fname,
-                        header=False,
-                        index=False,
-                        mode='a',
-                    )
-
-                    # write running status
-                    if self._log_fname is not None:
-                        info(f' {datestr}: {articles.shape[0]:4d} articles')
-
-    def _single_query(self, datestr: str, /, **kwargs) -> DataFrame:
-        """Run query for a single date
-
-        Parameters
-        ----------
-        datestr: str
-            date to run query for.
-            format: YYYY/MM/DD
-        **kwargs: Any
-            passed to _safe_query()
-
-        Returns
-        -------
-        DataFrame
-            articles matching query on :code:`datestr`
-        """
-
-        # get query for specific day
-        query = f'{self._query} AND ({datestr} [edat])'
-
-        # send query to pubmed servers
-        results = self._safe_query(query, **kwargs)
-
-        # format resulting articles
-        articles = DataFrame(
-            [
-                [
-                    getattr(result, field)
-                    if hasattr(result, field)
-                    else ''
-                    for field in self._header
-                ]
-                for result in results
-            ],
-            columns=self._header,
-        )
-
-        # set date
-        articles['date'] = datestr
-
-        # return df
-        return articles
-
-    @retry(delay=10)
-    def _safe_query(
+    @retry(delay=3)
+    def query(
         self,
         query: str,
         /,
-        *,
-        max_results: int = 1000,
-        **kwargs
-    ) -> Iterator:
-        """Safely send query to PubMed servers
+    ) -> tuple(DataFrame, NDArray[(Any,), date]):
+        """Query PubMed servers, append results to file
 
         This function is encased in an infinite retry loop, which is necessary
         due to frequent connection interruptions or failures to properly
@@ -196,40 +83,54 @@ class PubMedInterface:
         Parameters
         ----------
         query: str
-            PubMed query
-        max_results: int, optional, default=1000
-            Maximum number of resulting articles
-        **kwargs: Any, optional
-            Additional kwargs to pass to PubMed.query()
+            query to send to PubMed servers
 
         Returns
         -------
-        Iterator
-            articles found through query
+        DataFrame
+            resulting articles
+        NDArray of shape(num_articles,) of type :code:`date`
+            date of each resulting article
         """
-        return self._pubmed.query(
+
+        # query pubmed
+        articles_it = self._pubmed.query(
             query,
-            max_results=max_results,
-            **kwargs
+            max_results=self._max_results,
         )
 
+        # convert to df
+        articles_df = DataFrame(
+            [
+                [
+                    getattr(article, field)
+                    if hasattr(article, field)
+                    else ''
+                    for field in self._header
+                ]
+                for article in articles_it
+            ],
+            columns=self._header,
+        )
 
-# command-line interface
-if __name__ == '__main__':
+        # ensure that each row in resulting database has a unique index
+        articles_df.index += self._count
+        self._count += articles_df.shape[0]
 
-    # parse arguments
-    parser = ArgumentParser('Batch-Query PubMed Articles')
-    parser.add_argument(
-        '-c',
-        '--config_fname',
-        default='config/query.yaml',
-        help='Configuration yaml file. '
-             'This file\'s variables are used to construct PubMedInterface()',
-    )
-    args = parser.parse_args()
+        # append articles to file
+        if self._fname is not None:
+            articles_df.to_csv(
+                self._fname,
+                header=False,
+                mode='a',
+            )
 
-    # load configuration
-    config = yaml.safe_load(open(args.config_fname, 'r'))
+        # get dates of articles
+        dates = articles_df['publication_date']
+        dates = array([
+            d if isinstance(d, date) else NaN
+            for d in dates
+        ])
 
-    # run query
-    PubMedInterface(**config).run_query()
+        # return
+        return articles_df, dates

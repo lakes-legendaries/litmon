@@ -1,5 +1,15 @@
-
-fname: out/pubmed_database.csv
+fname: {
+  mbox: [
+    data/dump1.mbox,
+    data/dump2.mbox,
+  ],
+  pmids: data/pmid.txt,
+  pos: data/pos.csv,
+}
+kwargs: {
+  mbox: {},
+  pos: {},
+}
 query: >-
   (english[la] OR hasabstract)
   AND
@@ -33,5 +43,3 @@ query: >-
   )
   AND
   (2007 : 2025[dp])
-start_date: 2012/01/01
-end_date: 2022/01/01

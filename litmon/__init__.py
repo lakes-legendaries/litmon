@@ -2,7 +2,8 @@
 
 # flake8: noqa
 
-from litmon.query import PubMedInterface
+from litmon.mbox import PubMedIDExtractor
+from litmon.query import PubMedQuerier
 
 
 __version__ = '0.0.2'
