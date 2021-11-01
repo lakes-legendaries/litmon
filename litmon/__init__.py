@@ -6,4 +6,4 @@ from litmon.mbox import PubMedIDExtractor
 from litmon.query import PubMedQuerier
 
 
-__version__ = '0.0.2'
+__version__ = '0.0.3'
