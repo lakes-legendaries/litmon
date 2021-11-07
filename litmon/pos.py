@@ -4,6 +4,7 @@ from argparse import ArgumentParser
 from typing import Any
 
 from nptyping import NDArray
+from pandas import DataFrame
 import yaml
 
 from litmon.query import PubMedQuerier
@@ -34,11 +35,10 @@ class PositiveQuerier(PubMedQuerier):
     ):
 
         # initialize base
-        PubMedQuerier.__init__(
-            self,
-            fname=fname,
-            **kwargs
-        )
+        PubMedQuerier.__init__(self, **kwargs)
+
+        # Initialize df of resulting articles
+        pos_articles = DataFrame([], columns=self.header)
 
         # run query in batches
         for batch_start in range(0, len(pmids), batch_size):
@@ -53,8 +53,14 @@ class PositiveQuerier(PubMedQuerier):
                     query += ' OR '
                 query += f'({id} [PMID])'
 
-            # run query, appending result to file
-            self.query(query)
+            # run query
+            queried_articles = self.query(query)
+
+            # save results
+            pos_articles = pos_articles.append(queried_articles)
+
+        # save to file
+        pos_articles.to_csv(fname)
 
 
 # command-line interface
@@ -81,5 +87,7 @@ if __name__ == '__main__':
     PositiveQuerier(
         fname=config['fname']['pos'],
         pmids=pmids,
-        **config['kwargs']['pos']
+        **config['user'],
+        **config['kwargs']['query'],
+        **config['kwargs']['pos'],
     )

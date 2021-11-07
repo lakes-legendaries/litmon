@@ -1,4 +1,16 @@
+user: {
+  email: mike@lakeslegendaries.com,
+  tool: org.mfoundation.litmon,
+}
+dates: {
+  fit_start: 2013/01/01,
+  eval_start: 2018/01/01,
+  eval_end:,
+}
 fname: {
+  dbase: data/dbase.csv,
+  eval: data/eval.csv,
+  fit: data/fit.csv,
   mbox: [
     data/dump1.mbox,
     data/dump2.mbox,
@@ -7,8 +19,10 @@ fname: {
   pos: data/pos.csv,
 }
 kwargs: {
+  dbase: {},
   mbox: {},
   pos: {},
+  query: {},
 }
 query: >-
   (english[la] OR hasabstract)
