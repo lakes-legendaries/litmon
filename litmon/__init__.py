@@ -8,4 +8,4 @@ from litmon.pos import PositiveQuerier
 from litmon.query import PubMedQuerier
 
 
-__version__ = '0.0.3'
+__version__ = '0.0.4'
