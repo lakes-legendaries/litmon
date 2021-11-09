@@ -23,6 +23,7 @@ kwargs: {
   mbox: {},
   pos: {},
   query: {},
+  split: {},
 }
 query: >-
   (english[la] OR hasabstract)

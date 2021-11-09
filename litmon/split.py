@@ -28,10 +28,10 @@ class Splitter:
         balance_ratio: float = 3,
         chunk_size: int = 10000,
         date_field: str = 'publication_date',
-        end_date: str = None,
-        frac_train: float = 0.75,
-        start_date: str = None,
     ):
+
+        # parse cutoff date
+        cutoff_date = DBaseBuilder._get_date(cutoff_date)
 
         # save needed parameters
         self._chunk_size = chunk_size
@@ -39,9 +39,6 @@ class Splitter:
         self._date_field = date_field
         self._dbase_fname = dbase_fname
         self._fit_fname = fit_fname
-
-        # parse cutoff date
-        cutoff_date = DBaseBuilder._get_date(cutoff_date)
 
         # get article count before cutoff date
         num_pos, total = self._get_counts()
@@ -88,10 +85,10 @@ class Splitter:
 
             # update counts
             num_pos += articles['label'][0:n].sum()
-            total += n
+            total += n + 1
 
             # check if reached cutoff date
-            if n < self._chunk_size:
+            if n + 1 < self._chunk_size:
                 break
 
         # return
@@ -157,6 +154,6 @@ if __name__ == '__main__':
         dbase_fname=config['fname']['dbase'],
         fit_fname=config['fname']['fit'],
         eval_fname=config['fname']['eval'],
-        cutoff_date=config['dates']['split_cutoff'],
-        **config['kwargs']['dataset']
+        cutoff_date=config['dates']['eval_start'],
+        **config['kwargs']['split']
     )

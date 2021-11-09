@@ -60,7 +60,7 @@ class PositiveQuerier(PubMedQuerier):
             pos_articles = pos_articles.append(queried_articles)
 
         # save to file
-        pos_articles.to_csv(fname)
+        pos_articles.to_csv(fname, index=False)
 
 
 # command-line interface

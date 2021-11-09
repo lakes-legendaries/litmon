@@ -97,8 +97,7 @@ class PubMedQuerier:
             columns=self.header,
         )
 
-        # ensure that each row in resulting database has a unique index
-        articles_df.index += self.count
+        # update count of articles pulled
         self.count += articles_df.shape[0]
 
         # return

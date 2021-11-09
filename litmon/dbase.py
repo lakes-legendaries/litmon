@@ -92,10 +92,12 @@ class DBaseBuilder(PubMedQuerier):
 
         # write file header
         file_header = deepcopy(self.header)
+        file_header.insert(0, 'index')
         file_header.append('label')
-        DataFrame([], columns=file_header).to_csv(dbase_fname)
+        DataFrame([], columns=file_header).to_csv(dbase_fname, index=False)
 
         # run queries
+        count = 0
         cur_date = min_date
         while cur_date <= max_date:
 
@@ -113,7 +115,7 @@ class DBaseBuilder(PubMedQuerier):
                     type(article[date_field]) is date
                     and article[date_field] == cur_date
                 )
-            articles = articles.iloc[keep_me, :]
+            articles = articles.iloc[keep_me, :].reset_index()
 
             # label articles positive / negative
             articles['label'] = 0
@@ -123,10 +125,15 @@ class DBaseBuilder(PubMedQuerier):
                     for pos_pmid in pos_articles['pubmed_id']
                 ])
 
+            # increment index
+            articles.index += count
+            count += articles.shape[0]
+
             # append to file
             articles.to_csv(
                 dbase_fname,
                 header=False,
+                index=False,
                 mode='a',
             )
 
@@ -157,7 +164,10 @@ class DBaseBuilder(PubMedQuerier):
         try:
             return datetime.strptime(datestr, '%Y-%m-%d').date()
         except Exception:
-            return None
+            try:
+                return datetime.strptime(datestr, '%Y/%m/%d').date()
+            except Exception:
+                return None
 
     @classmethod
     def _get_dates(cls, datestr: Series) -> NDArray[(Any,), date]:
