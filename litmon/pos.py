@@ -71,7 +71,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '-c',
         '--config_fname',
-        default='config/litmon.yaml',
+        default='config/std.yaml',
         help='Configuration yaml file. '
              'See the docs for details. ',
     )

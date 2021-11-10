@@ -25,8 +25,6 @@ class DBaseBuilder(PubMedQuerier):
         name of positive (target) articles file
     query: str
         standard pubmed query for pulling these types of articles
-    date_field: str, optional, default='publication_date'
-        name of date field in :code:`pos_articles`
     log_fname: str, optional, default=logs/dbase.log
         file to log progress to
     min_date: str, optional, default=None
@@ -43,7 +41,6 @@ class DBaseBuilder(PubMedQuerier):
         pos_fname: str,
         query: str,
         *,
-        date_field: str = 'publication_date',
         log_fname: str = 'logs/dbase.log',
         min_date: str = None,
         max_date: str = None,
@@ -76,7 +73,7 @@ class DBaseBuilder(PubMedQuerier):
             max_date = datetime.strptime(max_date, '%Y/%m/%d').date()
 
         # extract dates from positive articles
-        dates = self.__class__._get_dates(pos_articles[date_field])
+        dates = self.__class__._get_dates(pos_articles['publication_date'])
 
         # get date bounds
         min_date: date = (
@@ -112,8 +109,8 @@ class DBaseBuilder(PubMedQuerier):
             keep_me = zeros(articles.shape[0], dtype=bool)
             for n, (_, article) in enumerate(articles.iterrows()):
                 keep_me[n] = (
-                    type(article[date_field]) is date
-                    and article[date_field] == cur_date
+                    type(article['publication_date']) is date
+                    and article['publication_date'] == cur_date
                 )
             articles = articles.iloc[keep_me, :].reset_index()
 
@@ -199,7 +196,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '-c',
         '--config_fname',
-        default='config/litmon.yaml',
+        default='config/std.yaml',
         help='Configuration yaml file. '
              'See the docs for details. ',
     )

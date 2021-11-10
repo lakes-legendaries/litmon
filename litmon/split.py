@@ -15,8 +15,33 @@ from litmon.dbase import DBaseBuilder
 class Splitter:
     """Split fit/eval datasets
 
+    The fit/eval set is split via the free parameter :code:`cutoff_date`.
+
+    All positive (target) articles before the :code:`cutoff_date` are included
+    in the fitting set, along with a randomly-selected
+    :code:`n=num_target*balance_ratio` negative (non-target) articles. This is
+    selected on an article-by-article basis, so the actual number of negative
+    articles will vary.
+
+    All articles from the :code:`cutoff_date` forward are included in the eval
+    set.
+
     Parameters
     ----------
+    dbase_fname: str
+        filename for pubmed article database
+    fit_fname: str
+        output filename for fitting set
+    eval_fname: str
+        output filename for evaluation set
+    cutoff_date: str
+        cutoff date dividing fit and eval set.
+        article dates :code:`>= cutoff_date` are put in the eval set.
+    balance_ratio: float
+        number negative (non-target) articles = number positive (target)
+        articles * :code:`balance_ratio`
+    chunk_size: int
+        number of articles to process from :code:`dbase_fname` at once
     """
     def __init__(
         self,
@@ -28,7 +53,6 @@ class Splitter:
         *,
         balance_ratio: float = 3,
         chunk_size: int = 10000,
-        date_field: str = 'publication_date',
     ):
 
         # parse cutoff date
@@ -37,7 +61,6 @@ class Splitter:
         # save needed parameters
         self._chunk_size = chunk_size
         self._cutoff_date = cutoff_date
-        self._date_field = date_field
         self._dbase_fname = dbase_fname
         self._fit_fname = fit_fname
 
@@ -68,7 +91,10 @@ class Splitter:
         pre_kwargs: dict = {},
         post_kwargs: dict = {},
     ):
-        """Iterate through database. Perform pre/post actions on each article
+        """Iterate through database. Perform pre/post actions on each article.
+
+        This is a skeleton function for iterating through a database, that can
+        then be customized through the pre/pose actions.
 
         Parameters
         ----------
@@ -91,7 +117,7 @@ class Splitter:
 
                 # check article date
                 article_date = DBaseBuilder._get_date(
-                    article[self._date_field]
+                    article['publication_date']
                 )
 
                 # check which action to perform
@@ -129,6 +155,8 @@ class Splitter:
     def _extract_fit(self, article: Series, /):
         """Extract article for fitting
 
+        :code:`pre_action` for :meth:`_scan_db`
+
         :code:`self._fit` must be initialized before using this function
 
         Parameters
@@ -141,6 +169,8 @@ class Splitter:
 
     def _extract_eval(self, article: Series, /):
         """Extract article for evaluation
+
+        :code:`post_action` for :meth:`_scan_db`
 
         :code:`self._eval` must be initialized before using this function
 
@@ -160,7 +190,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '-c',
         '--config_fname',
-        default='config/litmon.yaml',
+        default='config/std.yaml',
         help='Configuration yaml file. '
              'See the docs for details. ',
     )

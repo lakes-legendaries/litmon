@@ -18,7 +18,7 @@ class PubMedIDExtractor:
     ----------
     data: list[str]
         file contents to parse
-    pattern: str, optional, default='PMID.{0,1}\s*([0-9]{8})'
+    pattern: str, optional, default='PMID.{0,1}[ ]*([0-9]{8})'
         regular expression to find PubMed IDs
 
     Attributes
@@ -32,7 +32,7 @@ class PubMedIDExtractor:
         data: list[str],
         /,
         *,
-        pattern: str = 'PMID.{0,1}\s*([0-9]{8})',  # noqa
+        pattern: str = 'PMID.{0,1}[ ]*([0-9]{8})',  # noqa
     ):
 
         # initialize attribute
@@ -67,7 +67,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '-c',
         '--config_fname',
-        default='config/litmon.yaml',
+        default='config/std.yaml',
         help='Configuration yaml file. '
              'See the docs for details. ',
     )
