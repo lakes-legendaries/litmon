@@ -10,6 +10,12 @@ Check out this repo on `GitHub <https://github.com/lakes-legendaries/litmon>`_!
 Table Of Contents
 *****************
 .. toctree::
-    :maxdepth: 1
+   :maxdepth: 1
 
-    
+   quickstart
+   mbox
+   pos
+   dbase
+   split
+   config
+   dev
