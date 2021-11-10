@@ -9,4 +9,4 @@ from litmon.query import PubMedQuerier
 from litmon.split import Splitter
 
 
-__version__ = '0.0.6'
+__version__ = '0.0.7'
