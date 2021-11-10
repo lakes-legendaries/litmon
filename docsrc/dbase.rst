@@ -24,5 +24,9 @@ Date limits can be put on this database via the :code:`config/std.yaml` configur
 API Reference
 *************
 
+.. autofunction:: litmon.dates.get_date
+
+.. autofunction:: litmon.dates.get_dates
+
 .. autoclass:: litmon.dbase.DBaseBuilder
     :show-inheritance:

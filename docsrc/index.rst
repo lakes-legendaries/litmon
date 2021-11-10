@@ -22,5 +22,6 @@ Table Of Contents
    pos
    dbase
    split
+   vec
    config
    dev

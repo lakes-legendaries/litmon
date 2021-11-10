@@ -9,7 +9,7 @@ from typing import Callable
 from pandas import DataFrame, read_csv, Series
 import yaml
 
-from litmon.dbase import DBaseBuilder
+from litmon.dates import get_date
 
 
 class Splitter:
@@ -56,7 +56,7 @@ class Splitter:
     ):
 
         # parse cutoff date
-        cutoff_date = DBaseBuilder._get_date(cutoff_date)
+        cutoff_date = get_date(cutoff_date)
 
         # save needed parameters
         self._chunk_size = chunk_size
@@ -116,9 +116,7 @@ class Splitter:
             for _, article in articles.iterrows():
 
                 # check article date
-                article_date = DBaseBuilder._get_date(
-                    article['publication_date']
-                )
+                article_date = get_date(article['publication_date'])
 
                 # check which action to perform
                 do_pre = (

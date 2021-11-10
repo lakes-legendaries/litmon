@@ -70,3 +70,12 @@ corresponding page of the documentation.
 
    This will create a :code:`data/fit.csv` file and a :code:`data/eval.csv`
    file.
+
+#. Vectorize the articles in your fitting/evaluation sets with:
+
+   .. code-block:: bash
+
+      python litmon/vec.py
+   
+   This will output your vectorized documents to :code:`fit.npy` and
+   :code:`eval.npy` binary files.

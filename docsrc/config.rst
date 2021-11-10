@@ -17,35 +17,37 @@ The information expected to be supplied in this file includes:
 
    # required by the pubmed api
    user: {
-     email:,  # your email address
-     tool:,  # name of your program (arbitrary)
+     email: str,  # your email address
+     tool: str,  # name of your program (arbitrary)
    }
 
-   # date limits
+   # date limits, all w/ format YY-mm-dd
    dates: {
-     fit_start: 'YYYY/MM/DD', # if None: date of first positive article
-     eval_start: 'YYYY/MM/DD',  # cutoff date between fit/eval datasets
-     eval_end: 'YYYY/MM/DD',  # if None: date of last positive article
+     fit_start: str,  # if None: date of first positive article
+     eval_start: str,  # cutoff date between fit/eval datasets
+     eval_end: str,  # if None: date of first positive article
    }
 
    # input/output filenames
    fname: {
-     dbase: '',
-     eval: '',
-     fit: '',
-     mbox: [],  # list of mbox files
-     pmids: '',
-     pos: '',
+     dbase: str,
+     eval: str,
+     fit: str,
+     mbox: list[str],  # list of mbox dumps
+     pmids: str,
+     pos: str,
+     vec_eval: str,
+     vec_fit: str,
    }
 
    # extra kwargs supplied to the specified module
    kwargs: {
-     dbase: {},
-     mbox: {},
-     pos: {},
-     query: {},
-     split: {},
+     dbase: dict[str, Any],
+     mbox: dict[str, Any],
+     pos: dict[str, Any],
+     query: dict[str, Any],
+     split: dict[str, Any],
    }
 
    # PubMed query for negative articles
-   query: ''
+   query: str

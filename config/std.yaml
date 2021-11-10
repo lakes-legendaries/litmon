@@ -17,6 +17,8 @@ fname: {
   ],
   pmids: data/pmid.txt,
   pos: data/pos.csv,
+  vec_eval: data/eval.npy,
+  vec_fit: data/fit.npy,
 }
 kwargs: {
   dbase: {},
@@ -24,6 +26,7 @@ kwargs: {
   pos: {},
   query: {},
   split: {},
+  vec: {},
 }
 query: >-
   (english[la] OR hasabstract)

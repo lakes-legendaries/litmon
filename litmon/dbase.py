@@ -4,13 +4,12 @@ from argparse import ArgumentParser
 from copy import deepcopy
 from datetime import date, datetime, timedelta
 from logging import basicConfig, info, INFO
-from typing import Any
 
-from nptyping import NDArray
-from numpy import arange, array, zeros
-from pandas import DataFrame, read_csv, Series
+from numpy import arange, zeros
+from pandas import DataFrame, read_csv
 import yaml
 
+from litmon.dates import get_dates
 from litmon.query import PubMedQuerier
 
 
@@ -73,7 +72,7 @@ class DBaseBuilder(PubMedQuerier):
             max_date = datetime.strptime(max_date, '%Y/%m/%d').date()
 
         # extract dates from positive articles
-        dates = self.__class__._get_dates(pos_articles['publication_date'])
+        dates = get_dates(pos_articles['publication_date'])
 
         # get date bounds
         min_date: date = (
@@ -143,49 +142,6 @@ class DBaseBuilder(PubMedQuerier):
 
             # increment date
             cur_date += timedelta(days=1)
-
-    @classmethod
-    def _get_date(cls, datestr: str) -> date:
-        """Convert datestr to date
-
-        Parameters
-        ----------
-        datestr: str
-            date as str, in formt YYYY-mm-dd
-
-        Returns
-        -------
-        date
-            formatted date, or None if is ill-formatted
-        """
-        try:
-            return datetime.strptime(datestr, '%Y-%m-%d').date()
-        except Exception:
-            try:
-                return datetime.strptime(datestr, '%Y/%m/%d').date()
-            except Exception:
-                return None
-
-    @classmethod
-    def _get_dates(cls, datestr: Series) -> NDArray[(Any,), date]:
-        """Extract dates from a Series
-
-        Parameters
-        ----------
-        datestr: Series of str
-            dates, in format YYYY-mm-dd.
-            Any ill-formed dates will be discarded
-
-        Returns
-        -------
-        NDArray
-            extracted dates
-        """
-        dates = [
-            DBaseBuilder._get_date(d)
-            for d in datestr
-        ]
-        return array([d for d in dates if d])
 
 
 # command-line interface

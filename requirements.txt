@@ -52,3 +52,4 @@ threadpoolctl==3.0.0
 toml==0.10.2
 typish==1.9.3
 urllib3==1.26.7
+vhash @ git+https://github.com/lakes-legendaries/vhash.git@8a7131159a430dd1a69063afcd58efcd913061e8
