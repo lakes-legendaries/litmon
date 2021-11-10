@@ -2,10 +2,6 @@
 Extract PMIDs from Mailboxes
 ############################
 
-********
-Overview
-********
-
 The Methuselah Foundation has, for several years, paid people to read
 aging-related PubMed articles, and to bring the best ones to the attention of
 the leadership of the foundation. This has typically been communicated through
