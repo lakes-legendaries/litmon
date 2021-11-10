@@ -11,4 +11,4 @@ from litmon.split import Splitter
 from litmon.vec import Vectorizer
 
 
-__version__ = '0.0.9'
+__version__ = '0.0.10'
