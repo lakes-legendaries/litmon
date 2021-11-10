@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from argparse import ArgumentParser
 from random import random
+from typing import Callable
 
-from pandas import DataFrame, read_csv
+from pandas import DataFrame, read_csv, Series
 import yaml
 
 from litmon.dbase import DBaseBuilder
@@ -41,73 +42,45 @@ class Splitter:
         self._fit_fname = fit_fname
 
         # get article count before cutoff date
-        num_pos, total = self._get_counts()
+        self._num_pos = 0
+        self._total = 0
+        self._scan_db(Splitter._count)
 
         # get selection probability
-        prob_incl = balance_ratio * num_pos / total
+        self._prob_incl = balance_ratio * self._num_pos / self._total
 
-        # extract fit articles
-        self._get_fitters(prob_incl)
-
-        # extract eval articles
-        eval_set = []
-
-    def _get_counts(self) -> tuple(int, int):
-        """Get count of articles before cutoff date
-
-        Returns
-        -------
-        num_pos: int
-            number of target articles before cutoff date
-        total: int
-            total number of articles before cutoff date
-        """
-
-        # initialize counts
-        num_pos = 0
-        total = 0
-
-        # read database in chunks
-        for articles in read_csv(
-                self._dbase_fname,
-                chunksize=self._chunk_size,
+        # create dataset
+        self._fit = []
+        self._eval = []
+        self._scan_db(Splitter._extract_fit, Splitter._extract_eval)
+        for data, fname in zip(
+            [self._fit, self._eval],
+            [fit_fname, eval_fname],
         ):
+            DataFrame(data).to_csv(fname, index=False)
 
-            # iterate through articles in chunk
-            for n, (_, article) in enumerate(articles.iterrows()):
-
-                # check if reached cutoff date
-                article_date = DBaseBuilder._get_date(
-                    article[self._date_field]
-                )
-                if article_date > self._cutoff_date:
-                    break
-
-            # update counts
-            num_pos += articles['label'][0:n].sum()
-            total += n + 1
-
-            # check if reached cutoff date
-            if n + 1 < self._chunk_size:
-                break
-
-        # return
-        return num_pos, total
-
-    def _get_fitters(self, prob_incl: float):
-        """Get fitting articles, save to file
+    def _scan_db(
+        self,
+        /,
+        pre_action: Callable[[Splitter, Series], None] = None,
+        post_action: Callable[[Splitter, Series], None] = None,
+        *,
+        pre_kwargs: dict = {},
+        post_kwargs: dict = {},
+    ):
+        """Iterate through database. Perform pre/post actions on each article
 
         Parameters
         ----------
-        prob_incl: float
-            probability that a non-target article should be included in the
-            fitting dataset
+        pre_action: Callable(self, Series) -> None
+            call this function on each article that is :code:`< cutoff_date`
+        post_action: Callable(self, Series) -> None
+            call this function on each article that is :code:`>= cutoff_date`
+        pre_kwargs: Any
+            passed to :code:`pre_action`
+        post_kwargs: Any
+            passed to :code:`post_action`
         """
-
-        # initialize set
-        fit_set = []
-
-        # run through database in chunks
         for articles in read_csv(
                 self._dbase_fname,
                 chunksize=self._chunk_size,
@@ -116,20 +89,67 @@ class Splitter:
             # iterate through articles in chunk
             for _, article in articles.iterrows():
 
-                # check if reached cutoff date
+                # check article date
                 article_date = DBaseBuilder._get_date(
                     article[self._date_field]
                 )
-                if article_date > self._cutoff_date:
-                    DataFrame(fit_set).to_csv(self._fit_fname)
-                    return
 
-                # add to fitting set
-                if article['label'] or random() < prob_incl:
-                    fit_set.append(article)
+                # check which action to perform
+                do_pre = (
+                    pre_action is not None
+                    and article_date < self._cutoff_date
+                )
+                do_post = (
+                    post_action is not None
+                    and article_date >= self._cutoff_date
+                )
 
-        # save to file
-        DataFrame(fit_set).to_csv(self._fit_fname)
+                # perform pre/post actions
+                if do_pre:
+                    pre_action(self, article, **pre_kwargs)
+                elif do_post:
+                    post_action(self, article, **post_kwargs)
+
+    def _count(self, article: Series, /):
+        """Count total/positive articles
+
+        :code:`pre_action` for :meth:`_scan_db`
+
+        :code:`self._total` and :code:`self._num_pos` must be initialized
+        before using this function
+
+        Parameters
+        ----------
+        article: Series
+            current article
+        """
+        self._total += 1
+        self._num_pos += article['label']
+
+    def _extract_fit(self, article: Series, /):
+        """Extract article for fitting
+
+        :code:`self._fit` must be initialized before using this function
+
+        Parameters
+        ----------
+        article: Series
+            current article
+        """
+        if article['label'] or random() < self._prob_incl:
+            self._fit.append(article)
+
+    def _extract_eval(self, article: Series, /):
+        """Extract article for evaluation
+
+        :code:`self._eval` must be initialized before using this function
+
+        Parameters
+        ----------
+        article: Series
+            current article
+        """
+        self._eval.append(article)
 
 
 # command-line interface

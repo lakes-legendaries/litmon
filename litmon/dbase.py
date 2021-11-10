@@ -7,7 +7,7 @@ from logging import basicConfig, info, INFO
 from typing import Any
 
 from nptyping import NDArray
-from numpy import array, zeros
+from numpy import arange, array, zeros
 from pandas import DataFrame, read_csv, Series
 import yaml
 
@@ -126,7 +126,7 @@ class DBaseBuilder(PubMedQuerier):
                 ])
 
             # increment index
-            articles.index += count
+            articles['index'] = arange(articles.shape[0]) + count
             count += articles.shape[0]
 
             # append to file

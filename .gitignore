@@ -5,6 +5,7 @@
 # data files
 /data/*
 /logs/*
+/tests/*.csv
 !**/.gitkeep
 
 # documents
