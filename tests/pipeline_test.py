@@ -1,8 +1,10 @@
 from glob import glob
+from math import isclose
 from os import remove
 from random import seed
 
 import numpy
+from numpy import sort
 from pandas import read_csv
 import yaml
 
@@ -10,6 +12,7 @@ from litmon import (
     DBaseBuilder,
     Modeler,
     PositiveQuerier,
+    ResultsWriter,
     Splitter,
     Vectorizer,
 )
@@ -119,6 +122,27 @@ def test():
         # check resulting scores
         eval_scores = numpy.load(config['fname']['eval_scores'])
         assert(eval_scores.shape[0] == eval_csv.shape[0])
+
+        # write results
+        ResultsWriter(
+            eval_csv_fname=config['fname']['eval_csv'],
+            eval_scores_fname=config['fname']['eval_scores'],
+            rez_fname=config['fname']['rez'],
+            chunk_size=10,
+            num_write=30,
+        )
+
+        # check results
+        rez = read_csv(config['fname']['rez'])
+        assert(rez.shape[1] == eval_csv.shape[1] + 1)
+        assert(rez.shape[0] == 30)
+        assert(
+            isclose(
+                rez['scores'].min(),
+                sort(eval_scores)[-30],
+                abs_tol=1e-6
+            )
+        )
 
     finally:
         files = glob('tests/*.csv')

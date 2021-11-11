@@ -24,5 +24,6 @@ Table Of Contents
    split
    vec
    model
+   rez
    config
    dev

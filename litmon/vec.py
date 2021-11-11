@@ -144,7 +144,7 @@ if __name__ == '__main__':
     # load configuration
     config = yaml.safe_load(open(args.config_fname, 'r'))
 
-    # create database
+    # vectorize documents
     Vectorizer(
         fit_csv_fname=config['fname']['fit_csv'],
         fit_npy_fname=config['fname']['fit_npy'],

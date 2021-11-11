@@ -197,11 +197,11 @@ if __name__ == '__main__':
     # load configuration
     config = yaml.safe_load(open(args.config_fname, 'r'))
 
-    # create database
+    # create train/test sets
     Splitter(
         dbase_fname=config['fname']['dbase'],
         fit_csv_fname=config['fname']['fit_csv'],
         eval_csv_fname=config['fname']['eval_csv'],
         cutoff_date=config['dates']['eval_start'],
-        **config['kwargs']['split']
+        **config['kwargs']['split'],
     )

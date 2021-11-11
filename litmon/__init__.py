@@ -8,6 +8,7 @@ from litmon.mbox import PubMedIDExtractor
 from litmon.model import Modeler
 from litmon.pos import PositiveQuerier
 from litmon.query import PubMedQuerier
+from litmon.rez import ResultsWriter
 from litmon.split import Splitter
 from litmon.vec import Vectorizer
 

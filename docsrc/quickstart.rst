@@ -88,3 +88,11 @@ corresponding page of the documentation.
 
    The scores for the evaluation set are written to
    :code:`data/eval_scores.npy`.
+
+#. Write results to file with
+
+   .. code-block:: bash
+
+      python litmon/rez.py
+   
+   Results are written to :code:`data/results.csv`

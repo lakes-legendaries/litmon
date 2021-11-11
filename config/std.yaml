@@ -20,8 +20,7 @@ fname: {
   ],
   pmids: data/pmid.txt,
   pos: data/pos.csv,
-  vec_eval: data/eval.npy,
-  vec_fit: data/fit.npy,
+  rez: data/results.csv,
 }
 kwargs: {
   dbase: {},
@@ -29,6 +28,7 @@ kwargs: {
   model: {},
   pos: {},
   query: {},
+  rez: {},
   split: {},
   vec: {},
 }

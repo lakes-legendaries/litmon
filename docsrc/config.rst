@@ -39,8 +39,7 @@ The information expected to be supplied in this file includes:
      mbox: list[str],  # list of mbox dumps
      pmids: str,
      pos: str,
-     vec_eval: str,
-     vec_fit: str,
+     rez: str,
    }
 
    # extra kwargs supplied to the specified module
@@ -50,7 +49,9 @@ The information expected to be supplied in this file includes:
      model: dict[str, Any],
      pos: dict[str, Any],
      query: dict[str, Any],
+     rez: dict[str, Any],
      split: dict[str, Any],
+     vec: dict[str, Any],
    }
 
    # PubMed query for negative articles
