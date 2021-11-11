@@ -77,5 +77,14 @@ corresponding page of the documentation.
 
       python litmon/vec.py
    
-   This will output your vectorized documents to :code:`fit.npy` and
-   :code:`eval.npy` binary files.
+   This will output your vectorized documents to :code:`data/fit.npy` and
+   :code:`data/eval.npy`.
+
+#. Build ML models to score the articles in the evaluation set with:
+
+   .. code-block:: bash
+
+      python litmon/model.py
+
+   The scores for the evaluation set are written to
+   :code:`data/eval_scores.npy`.

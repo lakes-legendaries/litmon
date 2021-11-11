@@ -3,8 +3,7 @@
 from argparse import ArgumentParser
 
 import numpy
-from numpy import array
-from pandas import read_csv
+from pandas import DataFrame, read_csv
 from vhash import VHash
 import yaml
 
@@ -14,14 +13,16 @@ class Vectorizer:
 
     Parameters
     ----------
-    fit_ifname: str
+    fit_csv_fname: str
         Input fitting filename (csv)
-    fit_ofname: str
+    fit_npy_fname: str
         Output fitting filename (bin)
-    eval_ifname: str
+    eval_csv_fname: str
         Input evaluation filename (csv)
-    eval_ofname: str
+    eval_npy_fname: str
         Output evaluation filename (bin)
+    chunk_size: int, optional, default=10e3
+        number of articles to process from :code:`eval_csv_fname` at once
     use_cols: list[str], optional, default=None
         Article columns to use.
         If None, use:
@@ -46,11 +47,12 @@ class Vectorizer:
     def __init__(
         self,
         /,
-        fit_ifname: str,
-        fit_ofname: str,
-        eval_ifname: str,
-        eval_ofname: str,
+        fit_csv_fname: str,
+        fit_npy_fname: str,
+        eval_csv_fname: str,
+        eval_npy_fname: str,
         *,
+        chunk_size: int = 10e3,
         use_cols: list[str] = None,
         **kwargs
     ):
@@ -67,42 +69,62 @@ class Vectorizer:
                 'title',
             ]
 
-        # load files
-        fit_set = read_csv(fit_ifname)
-        eval_set = read_csv(eval_ifname)
+        # load fitting data
+        fit_csv = read_csv(fit_csv_fname)
 
-        # convert df -> list[str] by concatenating columns
-        text = [
-            [
-                ' '.join(
-                    [
-                        str(row[field])
-                        for field in use_cols
-                    ]
-                )
-                for _, row in set.iterrows()
-            ]
-            for set in [fit_set, eval_set]
-        ]
-
-        # get labels
-        labels = [
-            list(set['label'].to_numpy())
-            for set in [fit_set, eval_set]
-        ]
+        # extract text
+        fit_txt = self.__class__._extract_text(fit_csv, use_cols)
 
         # train vectorizer
-        self.vhash = VHash(**kwargs).fit(text[0], labels[0])
+        fit_y = list(fit_csv['label'].to_numpy())
+        self.vhash = VHash(**kwargs).fit(fit_txt, fit_y)
 
-        # vectorize text
-        vec = [
-            array(self.vhash.transform(t))
-            for t in text
+        # vectorize documents
+        fit_npy = self.vhash.transform(fit_txt)
+
+        # process eval set
+        eval_npy = []
+        for eval_csv in read_csv(eval_csv_fname, chunksize=chunk_size):
+
+            # extract text
+            eval_txt = self.__class__._extract_text(eval_csv, use_cols)
+
+            # vectorize documents
+            eval_npy.extend(self.vhash.transform(eval_txt))
+
+        # save to file
+        numpy.save(fit_npy_fname, fit_npy)
+        numpy.save(eval_npy_fname, eval_npy)
+
+    @classmethod
+    def _extract_text(
+        cls,
+        df: DataFrame,
+        use_cols: list[str]
+    ) -> list[str]:
+        """Extract text columns from a dataframe
+
+        Parameters
+        ----------
+        df: DataFrame
+            data to process
+        use_cols: list[str]
+            columns to extract
+
+        Returns
+        -------
+        list[str]
+            extracted text with :code:`use_cols` concatenated
+        """
+        return [
+            ' '.join(
+                [
+                    str(row[field])
+                    for field in use_cols
+                ]
+            )
+            for _, row in df.iterrows()
         ]
-
-        # write results to file
-        numpy.save(fit_ofname, vec[0])
-        numpy.save(eval_ofname, vec[1])
 
 
 # command-line interface
@@ -122,14 +144,11 @@ if __name__ == '__main__':
     # load configuration
     config = yaml.safe_load(open(args.config_fname, 'r'))
 
-    # load pmids
-    pmids = open(config['fname']['pmids']).read().splitlines()
-
     # create database
     Vectorizer(
-        fit_ifname=config['fname']['fit'],
-        fit_ofname=config['fname']['vec_fit'],
-        eval_ifname=config['fname']['eval'],
-        eval_ofname=config['fname']['vec_eval'],
+        fit_csv_fname=config['fname']['fit_csv'],
+        fit_npy_fname=config['fname']['fit_npy'],
+        eval_csv_fname=config['fname']['eval_csv'],
+        eval_npy_fname=config['fname']['eval_npy'],
         **config['kwargs']['vec'],
     )

@@ -6,7 +6,13 @@ import numpy
 from pandas import read_csv
 import yaml
 
-from litmon import DBaseBuilder, PositiveQuerier, Splitter, Vectorizer
+from litmon import (
+    DBaseBuilder,
+    Modeler,
+    PositiveQuerier,
+    Splitter,
+    Vectorizer,
+)
 
 
 def test():
@@ -62,44 +68,57 @@ def test():
         # split data
         Splitter(
             dbase_fname=config['fname']['dbase'],
-            fit_fname=config['fname']['fit'],
-            eval_fname=config['fname']['eval'],
+            fit_csv_fname=config['fname']['fit_csv'],
+            eval_csv_fname=config['fname']['eval_csv'],
             cutoff_date='2013-09-13',
+            balance_ratio=5,
         )
 
         # check fit set
-        fit_set = read_csv(config['fname']['fit'])
-        assert(fit_set['label'].sum() == 1)
-        assert(fit_set.shape[0] <= 6)
-        assert(all(fit_set['publication_date'] == '2013-09-12'))
+        fit_csv = read_csv(config['fname']['fit_csv'])
+        assert(fit_csv['label'].sum() == 1)
+        assert(fit_csv.shape[0] <= 6)
+        assert(all(fit_csv['publication_date'] == '2013-09-12'))
 
         # check eval set
-        eval_set = read_csv(config['fname']['eval'])
-        assert(eval_set['label'].sum() == 1)
-        assert(eval_set.shape[0] > 100)
-        assert(all(eval_set['publication_date'] == '2013-09-13'))
+        eval_csv = read_csv(config['fname']['eval_csv'])
+        assert(eval_csv['label'].sum() == 1)
+        assert(eval_csv.shape[0] > 100)
+        assert(all(eval_csv['publication_date'] == '2013-09-13'))
 
         # vectorize
         Vectorizer(
-            fit_ifname=config['fname']['fit'],
-            fit_ofname=config['fname']['vec_fit'],
-            eval_ifname=config['fname']['eval'],
-            eval_ofname=config['fname']['vec_eval'],
+            fit_csv_fname=config['fname']['fit_csv'],
+            fit_npy_fname=config['fname']['fit_npy'],
+            eval_csv_fname=config['fname']['eval_csv'],
+            eval_npy_fname=config['fname']['eval_npy'],
         )
 
         # check vectorized fit
-        vec_fit = numpy.load(config['fname']['vec_fit'])
-        assert(vec_fit.shape[0] == fit_set.shape[0])
-        assert(vec_fit.shape[1] == fit_set.shape[0])
-        assert(vec_fit.max() <= 1 + 1e-5)
-        assert(vec_fit.min() >= -1 - 1e-5)
+        fit_npy = numpy.load(config['fname']['fit_npy'])
+        assert(fit_npy.shape[0] == fit_csv.shape[0])
+        assert(fit_npy.shape[1] == fit_csv.shape[0])
+        assert(fit_npy.max() <= 1 + 1e-5)
+        assert(fit_npy.min() >= -1 - 1e-5)
 
         # check vectorized eval
-        vec_eval = numpy.load(config['fname']['vec_eval'])
-        assert(vec_eval.shape[0] == eval_set.shape[0])
-        assert(vec_eval.shape[1] == fit_set.shape[0])
-        assert(vec_eval.max() <= 1 + 1e-5)
-        assert(vec_eval.min() >= -1 - 1e-5)
+        eval_npy = numpy.load(config['fname']['eval_npy'])
+        assert(eval_npy.shape[0] == eval_csv.shape[0])
+        assert(eval_npy.shape[1] == fit_csv.shape[0])
+        assert(eval_npy.max() <= 1 + 1e-5)
+        assert(eval_npy.min() >= -1 - 1e-5)
+
+        # build ml model
+        Modeler(
+            fit_csv_fname=config['fname']['fit_csv'],
+            fit_npy_fname=config['fname']['fit_npy'],
+            eval_npy_fname=config['fname']['eval_npy'],
+            eval_scores_fname=config['fname']['eval_scores'],
+        )
+
+        # check resulting scores
+        eval_scores = numpy.load(config['fname']['eval_scores'])
+        assert(eval_scores.shape[0] == eval_csv.shape[0])
 
     finally:
         files = glob('tests/*.csv')

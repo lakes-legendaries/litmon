@@ -30,25 +30,25 @@ class Splitter:
     ----------
     dbase_fname: str
         filename for pubmed article database
-    fit_fname: str
+    fit_csv_fname: str
         output filename for fitting set
-    eval_fname: str
+    eval_csv_fname: str
         output filename for evaluation set
     cutoff_date: str
         cutoff date dividing fit and eval set.
         article dates :code:`>= cutoff_date` are put in the eval set.
-    balance_ratio: float
+    balance_ratio: float, optional, default=3
         number negative (non-target) articles = number positive (target)
         articles * :code:`balance_ratio`
-    chunk_size: int
+    chunk_size: int, optional, default=10e3
         number of articles to process from :code:`dbase_fname` at once
     """
     def __init__(
         self,
         /,
         dbase_fname: str,
-        fit_fname: str,
-        eval_fname: str,
+        fit_csv_fname: str,
+        eval_csv_fname: str,
         cutoff_date: str,
         *,
         balance_ratio: float = 3,
@@ -62,7 +62,7 @@ class Splitter:
         self._chunk_size = chunk_size
         self._cutoff_date = cutoff_date
         self._dbase_fname = dbase_fname
-        self._fit_fname = fit_fname
+        self._fit_csv_fname = fit_csv_fname
 
         # get article count before cutoff date
         self._num_pos = 0
@@ -78,7 +78,7 @@ class Splitter:
         self._scan_db(Splitter._extract_fit, Splitter._extract_eval)
         for data, fname in zip(
             [self._fit, self._eval],
-            [fit_fname, eval_fname],
+            [fit_csv_fname, eval_csv_fname],
         ):
             DataFrame(data).to_csv(fname, index=False)
 
@@ -200,8 +200,8 @@ if __name__ == '__main__':
     # create database
     Splitter(
         dbase_fname=config['fname']['dbase'],
-        fit_fname=config['fname']['fit'],
-        eval_fname=config['fname']['eval'],
+        fit_csv_fname=config['fname']['fit_csv'],
+        eval_csv_fname=config['fname']['eval_csv'],
         cutoff_date=config['dates']['eval_start'],
         **config['kwargs']['split']
     )

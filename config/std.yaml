@@ -9,8 +9,11 @@ dates: {
 }
 fname: {
   dbase: data/dbase.csv,
-  eval: data/eval.csv,
-  fit: data/fit.csv,
+  eval_csv: data/eval.csv,
+  eval_npy: data/eval.npy,
+  eval_scores: data/eval_scores.npy,
+  fit_csv: data/fit.csv,
+  fit_npy: data/fit.npy,
   mbox: [
     data/dump1.mbox,
     data/dump2.mbox,
@@ -23,6 +26,7 @@ fname: {
 kwargs: {
   dbase: {},
   mbox: {},
+  model: {},
   pos: {},
   query: {},
   split: {},

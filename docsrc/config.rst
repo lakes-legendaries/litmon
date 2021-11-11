@@ -31,8 +31,11 @@ The information expected to be supplied in this file includes:
    # input/output filenames
    fname: {
      dbase: str,
-     eval: str,
-     fit: str,
+     eval_csv: str,
+     eval_npy: str,
+     eval_scores: str,
+     fit_csv: str,
+     fit_npy: str,
      mbox: list[str],  # list of mbox dumps
      pmids: str,
      pos: str,
@@ -44,6 +47,7 @@ The information expected to be supplied in this file includes:
    kwargs: {
      dbase: dict[str, Any],
      mbox: dict[str, Any],
+     model: dict[str, Any],
      pos: dict[str, Any],
      query: dict[str, Any],
      split: dict[str, Any],

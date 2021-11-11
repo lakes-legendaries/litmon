@@ -23,5 +23,6 @@ Table Of Contents
    dbase
    split
    vec
+   model
    config
    dev
