@@ -19,6 +19,15 @@ if __name__ == '__main__':
         packages=find_packages(),
 
         # requirements
-        install_requires=[],
+        install_requires=[
+            'numpy',
+            'nptyping',
+            'pandas',
+            'pymed',
+            'PyYAML',
+            'retry',
+            'sklearn',
+            'vhash @ git+https://github.com/lakes-legendaries/vhash.git',
+        ],
         python_requires='>=3.9',
     )
