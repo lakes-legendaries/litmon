@@ -14,7 +14,7 @@ dbase_fit: {
 }
 dbase_eval: {
   min_date: 2018/01/01,
-  max_date: 2020/12/31,
+  max_date: 2018/01/31,
   dbase_fname: data/dbase_eval.csv,
   log_fname: logs/dbase_eval.log,
 }
