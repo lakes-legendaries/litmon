@@ -6,6 +6,21 @@ This page provides a quick reference to the commands you'll need to operate
 this package. For a more in-depth look at any of these operations, see the
 corresponding page of the documentation.
 
+This page covers three main topics related to operating this package: Setting
+up your environment, training your model, and identifying target articles.
+
+All of the programs discussed below use configuration files. To learn more
+about how these work, check out the :ref:`config` page. That page also
+discusses how the command-line interfaces are generated for each script,
+which should assist advanced users of this package.
+
+***************************
+Setting Up Your Environment
+***************************
+
+To use this package, you'll need to setup your python environment and generate
+or obtain the required data files.
+
 .. note::
 
    This package was developed using :code:`python3.9.7` on :code:`Ubuntu
@@ -32,67 +47,97 @@ corresponding page of the documentation.
 
    .. code-block:: bash
 
-      python litmon/mbox.py
+      python litmon/cli/mbox.py
 
-   This will save the extracted PMIDs into the :code:`data/pmid.txt` file.
+   This will save the extracted PMIDs into the :code:`data/pmids.txt` file.
 
    If you do NOT have access to the mailbox dump files, then you will need to
    develop your own list of positive PMIDs to use for training. Save these
-   PMIDs to :code:`data/pmid.txt`, with one PMID on each line.
+   PMIDs to :code:`data/pmids.txt`, with one PMID on each line.
 
-#. The next step is to pull the full journal article for each positive PMID. To
-   do so, run:
+   For more information, check out the :ref:`mbox` page.
+
+#. (Optional) To pull all the data associated with each positive article, run:
 
    .. code-block:: bash
 
-      python litmon/pos.py
+      python litmon/cli/pos.py
 
    This will pull the positive articles using the :code:`pymed` package, saving
-   them to :code:`data/pos.csv`.
+   them to :code:`data/positive_articles.csv`.
 
-#. Next, you will need to build a database of positive and negative (target and
-   non-target) articles to train your model. Negative articles are pulled that
-   match the date range of your positive articles, and are pulled via a PubMed
-   query provided in :code:`config/std.yaml`.
+   For more information, check out the :ref:`dbase` page.
 
-   .. code-block:: bash
+*******************
+Training Your Model
+*******************
 
-      python litmon/dbase.py
+Once you've set up your environment, you'll need to train a model to
+discriminate between positive (target) and negative (non-target) articles.
 
-   Progress is logged to :code:`logs/dbase.log`. The resulting database in
-   output to :code:`data/dbase.csv`.
-
-#. Create fitting and evaluating sets from your database with:
-
-   .. code-block:: bash
-
-      python litmon/split.py
-
-   This will create a :code:`data/fit.csv` file and a :code:`data/eval.csv`
-   file.
-
-#. Vectorize the articles in your fitting/evaluation sets with:
+#. First, you'll need to build a database of positive and negative articles,
+   using the pmid list you created (above). Set the date bounds of your
+   database by specifying the :code:`min_date` and :code:`max_date` (in the
+   :code:`dbase_fit` dictionary) in your :code:`config/std.yaml` file. Then,
+   build the database with:
 
    .. code-block:: bash
 
-      python litmon/vec.py
+      python litmon/cli/dbase.py
    
-   This will output your vectorized documents to :code:`data/fit.npy` and
-   :code:`data/eval.npy`.
+   This will output your database to :code:`data/dbase_fit.csv`. Progress will
+   be logged to :code:`logs/dbase_fit.log`.
 
-#. Build ML models to score the articles in the evaluation set with:
+   For more information, check out the :ref:`dbase` page.
 
-   .. code-block:: bash
-
-      python litmon/model.py
-
-   The scores for the evaluation set are written to
-   :code:`data/eval_scores.npy`.
-
-#. Write results to file with
+#. Next, train your model with:
 
    .. code-block:: bash
 
-      python litmon/rez.py
+      python litmon/cli/fit.py
+
+   Your model will be output to :code:`data/model.bin` and
+   :code:`data/model.pickle`. (Both files are required for your model to run.)
+
+   For more information, check out the :ref:`model` page.
+
+***************************
+Identifying Target Articles
+***************************
+
+Now that you've trained your model, you can use it to identify relevant
+articles in the scientific literature.
+
+#. First, build a database of articles to use your trained model on. The date
+   bounds for this article can be set in the :code:`config/std.yaml` file, by
+   modifying the :code:`min_date` and :code:`max_date` in the
+   :code:`dbase_eval` dictionary. Create this database with:
+
+   .. code-block:: bash
+
+      python litmon/cli/dbase.py -f user dbase_eval
    
-   Results are written to :code:`data/results.csv`
+   This will output your database to :code:`data/dbase_eval.csv`. Progress will
+   be logged to :code:`logs/dbase_eval.log`.
+
+   For more information, check out the :ref:`dbase` page.
+
+#. Next, score the articles in your databse with:
+
+   .. code-block:: bash
+
+      python litmon/cli/eval.py
+   
+   This will output scores to :code:`data/scores.npy`.
+
+   For more information, check out the :ref:`model` page.
+
+#. Finally, write the most relevant articles to file with:
+
+   .. code-block:: bash
+
+      python litmon/cli/rez.py
+
+   The most relevant articles will be written to :code:`data/results.csv`.
+
+   For more information, check out the :ref:`model` page.

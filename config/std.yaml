@@ -2,35 +2,21 @@ user: {
   email: mike@lakeslegendaries.com,
   tool: org.mfoundation.litmon,
 }
-dates: {
-  fit_start: 2013/01/01,
-  eval_start: 2018/01/01,
-  eval_end:,
+mbox_fname: [
+  data/dump1.mbox,
+  data/dump2.mbox,
+]
+dbase_fit: {
+  min_date: 2013/01/01,
+  max_date: 2017/12/31,
+  dbase_fname: data/dbase_fit.csv,
+  log_fname: logs/dbase_fit.log,
 }
-fname: {
-  dbase: data/dbase.csv,
-  eval_csv: data/eval.csv,
-  eval_npy: data/eval.npy,
-  eval_scores: data/eval_scores.npy,
-  fit_csv: data/fit.csv,
-  fit_npy: data/fit.npy,
-  mbox: [
-    data/dump1.mbox,
-    data/dump2.mbox,
-  ],
-  pmids: data/pmid.txt,
-  pos: data/pos.csv,
-  rez: data/results.csv,
-}
-kwargs: {
-  dbase: {},
-  mbox: {},
-  model: {},
-  pos: {},
-  query: {},
-  rez: {},
-  split: {},
-  vec: {},
+dbase_eval: {
+  min_date: 2018/01/01,
+  max_date: 2020/12/31,
+  dbase_fname: data/dbase_eval.csv,
+  log_fname: logs/dbase_eval.log,
 }
 query: >-
   (english[la] OR hasabstract)

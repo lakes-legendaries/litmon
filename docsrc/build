@@ -2,5 +2,7 @@
 
 rm -rfd docs
 mkdir docs
-sphinx-build docsrc docs &> /dev/null
+sphinx-build docsrc docs 1> /dev/null 2> docsrc/errors
+grep -v autosummary docsrc/errors
+rm docsrc/errors
 touch docs/.nojekyll

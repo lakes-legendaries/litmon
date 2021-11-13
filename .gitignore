@@ -3,10 +3,8 @@
 /*.egg-info
 
 # data files
-/data/*
+/data*/*
 /logs/*
-/tests/*
-!/tests/*.py
 !**/.gitkeep
 
 # documents

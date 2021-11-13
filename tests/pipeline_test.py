@@ -1,20 +1,17 @@
-from glob import glob
 from math import isclose
-from os import remove
+from os import mkdir, rename
 from random import seed
+from shutil import copyfile, rmtree
 
 import numpy
 from numpy import sort
 from pandas import read_csv
-import yaml
 
 from litmon import (
     DBaseBuilder,
-    Modeler,
-    PositiveQuerier,
+    ModelFitter,
+    ModelUser,
     ResultsWriter,
-    Splitter,
-    Vectorizer,
 )
 
 
@@ -23,132 +20,104 @@ def test():
     # set seed
     seed(271828)
 
+    # query
+    query = """
+        (english[la] OR hasabstract)
+        AND
+        (
+        biogeront*
+        OR "regenerative medicine"
+        OR "tissue engineering"
+        OR oxystero*
+        OR "7-ketocholesterol"
+        OR lipofus*
+        OR aging
+        OR ageing
+        OR mitochondri*
+        OR lysosom*
+        OR intein*
+        OR telomer*
+        OR longevity
+        OR glycation
+        OR (aggregat* NOT platelet)
+        OR amyloid*
+        OR synuclein
+        OR ("neurofibrillary tangles")
+        OR nft
+        OR nfts
+        OR ("lewy bodies")
+        OR ("inclusion bodies")
+        OR autophag*
+        OR immunosenescence
+        OR (integrase* NOT HIV)
+        OR (plasma AND redox)
+        )
+        AND
+        (2007 : 2025[dp])
+    """
+
+    # preserve existing data directory
+    rename('data', 'data0')
+    mkdir('data')
+
     # delete temporary files after test
     try:
 
-        # load in standard config
-        config = yaml.safe_load(open('config/std.yaml', 'r'))
+        # write pmids to file
+        with open('data/pmids.txt', 'w') as file:
+            print('24024165', file=file)
+            print('24025336', file=file)
 
-        # change filenames to write to tests folder
-        for cat, fname in config['fname'].items():
-            if type(fname) is not str:
-                continue
-            config['fname'][cat] = fname.replace('data', 'tests')
-
-        # get positives
-        PositiveQuerier(
-            fname=config['fname']['pos'],
-            pmids=[
-                '24024165',
-                '24025336',
-            ],
-            email=config['user']['email'],
-            tool=config['user']['tool'],
-        )
-
-        # check positives
-        pos_data = read_csv(config['fname']['pos'])
-        assert(pos_data.shape[0] == 2)
-        assert((pos_data['publication_date'] == '2013-09-12').sum() == 1)
-        assert((pos_data['publication_date'] == '2013-09-13').sum() == 1)
-
-        # build database
+        # build fit/eval databases
         DBaseBuilder(
-            dbase_fname=config['fname']['dbase'],
-            pos_fname=config['fname']['pos'],
-            query=config['query'],
-            email=config['user']['email'],
-            log_fname=None,
-            tool=config['user']['tool'],
+            query=query,
+            min_date='2013/09/12',
+            max_date='2013/09/13',
+            dbase_fname='data/dbase_fit.csv',
+            email='mike@lakeslegendaries.com',
+            tool='org.mfoundation.litmon',
         )
+        copyfile('data/dbase_fit.csv', 'data/dbase_eval.csv')
 
         # check database
-        dbase = read_csv(config['fname']['dbase'])
+        dbase = read_csv('data/dbase_fit.csv')
         assert(dbase.shape[0] > 100)
         assert(dbase['label'].sum() == 2)
         assert(dbase['index'].max() + 1 == dbase.shape[0])
 
-        # split data
-        Splitter(
-            dbase_fname=config['fname']['dbase'],
-            fit_csv_fname=config['fname']['fit_csv'],
-            eval_csv_fname=config['fname']['eval_csv'],
-            cutoff_date='2013-09-13',
-            balance_ratio=5,
-        )
+        # train model
+        ModelFitter(chunk_size=10)
 
-        # check fit set
-        fit_csv = read_csv(config['fname']['fit_csv'])
-        assert(fit_csv['label'].sum() == 1)
-        assert(fit_csv.shape[0] <= 6)
-        assert(all(fit_csv['publication_date'] == '2013-09-12'))
+        # use model to score articles
+        ModelUser()
 
-        # check eval set
-        eval_csv = read_csv(config['fname']['eval_csv'])
-        assert(eval_csv['label'].sum() == 1)
-        assert(eval_csv.shape[0] > 100)
-        assert(all(eval_csv['publication_date'] == '2013-09-13'))
-
-        # vectorize
-        Vectorizer(
-            fit_csv_fname=config['fname']['fit_csv'],
-            fit_npy_fname=config['fname']['fit_npy'],
-            eval_csv_fname=config['fname']['eval_csv'],
-            eval_npy_fname=config['fname']['eval_npy'],
-        )
-
-        # check vectorized fit
-        fit_npy = numpy.load(config['fname']['fit_npy'])
-        assert(fit_npy.shape[0] == fit_csv.shape[0])
-        assert(fit_npy.shape[1] == fit_csv.shape[0])
-        assert(fit_npy.max() <= 1 + 1e-5)
-        assert(fit_npy.min() >= -1 - 1e-5)
-
-        # check vectorized eval
-        eval_npy = numpy.load(config['fname']['eval_npy'])
-        assert(eval_npy.shape[0] == eval_csv.shape[0])
-        assert(eval_npy.shape[1] == fit_csv.shape[0])
-        assert(eval_npy.max() <= 1 + 1e-5)
-        assert(eval_npy.min() >= -1 - 1e-5)
-
-        # build ml model
-        Modeler(
-            fit_csv_fname=config['fname']['fit_csv'],
-            fit_npy_fname=config['fname']['fit_npy'],
-            eval_npy_fname=config['fname']['eval_npy'],
-            eval_scores_fname=config['fname']['eval_scores'],
-        )
-
-        # check resulting scores
-        eval_scores = numpy.load(config['fname']['eval_scores'])
-        assert(eval_scores.shape[0] == eval_csv.shape[0])
+        # check scores
+        scores = numpy.load('data/scores.npy')
+        assert(scores.shape[0] == dbase.shape[0])
+        assert((scores[dbase['label']] >= 0.9 * scores.max()).all())
 
         # write results
         ResultsWriter(
-            eval_csv_fname=config['fname']['eval_csv'],
-            eval_scores_fname=config['fname']['eval_scores'],
-            rez_fname=config['fname']['rez'],
             chunk_size=10,
             num_write=30,
         )
 
         # check results
-        rez = read_csv(config['fname']['rez'])
-        assert(rez.shape[1] == eval_csv.shape[1] + 1)
+        rez = read_csv('data/results.csv')
+        assert(rez.shape[1] == dbase.shape[1] + 1)
         assert(rez.shape[0] == 30)
         assert(
             isclose(
                 rez['scores'].min(),
-                sort(eval_scores)[-30],
+                sort(scores)[-30],
                 abs_tol=1e-6
             )
         )
 
+    # delete temp files, restore old data directory
     finally:
-        files = glob('tests/*.csv')
-        files.extend(glob('tests/*.npy'))
-        for file in files:
-            remove(file)
+        rmtree('data')
+        rename('data0', 'data')
 
 
 if __name__ == '__main__':

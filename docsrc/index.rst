@@ -18,12 +18,8 @@ Table Of Contents
    :maxdepth: 1
 
    quickstart
-   mbox
-   pos
-   dbase
-   split
-   vec
-   model
-   rez
    config
+   mbox
+   dbase
+   model
    dev

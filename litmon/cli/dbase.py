@@ -1,16 +1,14 @@
 """Build database of articles"""
 
-from argparse import ArgumentParser
 from copy import deepcopy
 from datetime import date, datetime, timedelta
 from logging import basicConfig, info, INFO
 
 from numpy import arange, zeros
-from pandas import DataFrame, read_csv
-import yaml
+from pandas import DataFrame
 
-from litmon.dates import get_dates
 from litmon.query import PubMedQuerier
+from litmon.utils.cli import cli
 
 
 class DBaseBuilder(PubMedQuerier):
@@ -18,39 +16,40 @@ class DBaseBuilder(PubMedQuerier):
 
     Parameters
     ----------
-    dbase_fname: str
-        name of output file
-    pos_fname: str
-        name of positive (target) articles file
     query: str
         standard pubmed query for pulling these types of articles
+    min_date: str
+        first date to query, in format YYYY/MM/DD
+    max_date: str
+        last date to query, in format YYYY/MM/DD
+    dbase_fname: str
+        name of output file
     log_fname: str, optional, default=logs/dbase.log
-        file to log progress to
-    min_date: str, optional, default=None
-        minimum date to query, in format YYYY/MM/DD
-    max_date: str, optional, default=None
-        maximum date to query, in format YYYY/MM/DD
+        file to log progress to. If None, don't log
+    pmids_fname: str, optional, default='data/pmids.txt'
+        file containing positive (target) pmids. This is used for labeling
+        documents True/False.
     **kwargs: Any
         Passed to base class :class:`~litmon.query.PubMedQuerier`.
     """
     def __init__(
         self,
         /,
-        dbase_fname: str,
-        pos_fname: str,
         query: str,
+        min_date: str,
+        max_date: str,
+        dbase_fname: str,
         *,
-        log_fname: str = 'logs/dbase.log',
-        min_date: str = None,
-        max_date: str = None,
+        log_fname: str = None,
+        pmids_fname: str = 'data/pmids.txt',
         **kwargs
     ):
 
-        # load positive articles
-        pos_articles = read_csv(pos_fname)
-
         # initialize base
         PubMedQuerier.__init__(self, **kwargs)
+
+        # load positive pmids
+        pmids = open(pmids_fname).read().splitlines()
 
         # setup logger
         if log_fname is not None:
@@ -66,25 +65,8 @@ class DBaseBuilder(PubMedQuerier):
             )
 
         # parse date arguments
-        if min_date is not None:
-            min_date = datetime.strptime(min_date, '%Y/%m/%d').date()
-        if max_date is not None:
-            max_date = datetime.strptime(max_date, '%Y/%m/%d').date()
-
-        # extract dates from positive articles
-        dates = get_dates(pos_articles['publication_date'])
-
-        # get date bounds
-        min_date: date = (
-            min(dates)
-            if min_date is None
-            else max(min_date, min(dates))
-        )
-        max_date: date = (
-            max(dates)
-            if max_date is None
-            else min(max_date, max(dates))
-        )
+        min_date = datetime.strptime(min_date, '%Y/%m/%d').date()
+        max_date = datetime.strptime(max_date, '%Y/%m/%d').date()
 
         # write file header
         file_header = deepcopy(self.header)
@@ -116,9 +98,11 @@ class DBaseBuilder(PubMedQuerier):
             # label articles positive / negative
             articles['label'] = 0
             for n, (_, article) in enumerate(articles.iterrows()):
+                cur_pmid = article['pubmed_id']
+                cur_pmid = cur_pmid[0:min(len(cur_pmid), 8)]
                 articles.loc[n, 'label'] = any([
-                    article['pubmed_id'] == pos_pmid
-                    for pos_pmid in pos_articles['pubmed_id']
+                    cur_pmid == pmid
+                    for pmid in pmids
                 ])
 
             # increment index
@@ -146,29 +130,9 @@ class DBaseBuilder(PubMedQuerier):
 
 # command-line interface
 if __name__ == '__main__':
-
-    # parse command-line arguments
-    parser = ArgumentParser('Build dabase of articles')
-    parser.add_argument(
-        '-c',
-        '--config_fname',
-        default='config/std.yaml',
-        help='Configuration yaml file. '
-             'See the docs for details. ',
+    config = cli(
+        cls='litmon.cli.dbase.DBaseBuilder',
+        description='Build database of articles',
+        default=['query', 'user', 'dbase_fit'],
     )
-    args = parser.parse_args()
-
-    # load configuration
-    config = yaml.safe_load(open(args.config_fname, 'r'))
-
-    # create database
-    DBaseBuilder(
-        dbase_fname=config['fname']['dbase'],
-        pos_fname=config['fname']['pos'],
-        query=config['query'],
-        min_date=config['dates']['fit_start'],
-        max_date=config['dates']['eval_end'],
-        **config['user'],
-        **config['kwargs']['query'],
-        **config['kwargs']['dbase'],
-    )
+    DBaseBuilder(**config)

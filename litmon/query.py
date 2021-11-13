@@ -14,11 +14,10 @@ class PubMedQuerier:
     Parameters
     ----------
     email: str
-        email of the user of this program.
-        this is required by the PubMed api
+        email of the user of this program. this is required by the PubMed api
     tool: str
-        name of the program running this query.
-        this is required by the PubMed api
+        name of the program running this query. this is required by the PubMed
+        api
     max_results: int, optional, default=1000
         Maximum number of PubMed articles retrieved in any single query.
         Required by the :code:`pymed.PubMed` tool

@@ -1,12 +1,8 @@
 """Build database of positive (target) articles"""
 
-from argparse import ArgumentParser
-from typing import Any
-
-from nptyping import NDArray
 from pandas import DataFrame
-import yaml
 
+from litmon.utils.cli import cli
 from litmon.query import PubMedQuerier
 
 
@@ -15,10 +11,10 @@ class PositiveQuerier(PubMedQuerier):
 
     Parameters
     ----------
-    fname: str
-        name of output file
-    pmids: NDArray of shape(num_articles,) of type str
+    pmids_fname: str, optional, default='data/pmids.txt'
         List of pmids from target articles
+    pos_fname: str, optional, default='data/positive_articles.csv'
+        name of output file for positive articles
     batch_size: int, optional, default=100
         Nummber of pmids to query at once
     **kwargs: Any
@@ -27,12 +23,15 @@ class PositiveQuerier(PubMedQuerier):
     def __init__(
         self,
         /,
-        fname: str,
-        pmids: NDArray[(Any,), str],
+        pmids_fname: str = 'data/pmids.txt',
+        pos_fname: str = 'data/positive_articles.csv',
         *,
         batch_size: int = 100,
         **kwargs
     ):
+
+        # load in pmids
+        pmids = open(pmids_fname).read().splitlines()
 
         # initialize base
         PubMedQuerier.__init__(self, **kwargs)
@@ -60,34 +59,14 @@ class PositiveQuerier(PubMedQuerier):
             pos_articles = pos_articles.append(queried_articles)
 
         # save to file
-        pos_articles.to_csv(fname, index=False)
+        pos_articles.to_csv(pos_fname, index=False)
 
 
 # command-line interface
 if __name__ == '__main__':
-
-    # parse command-line arguments
-    parser = ArgumentParser('Build dabase of positive (target) articles')
-    parser.add_argument(
-        '-c',
-        '--config_fname',
-        default='config/std.yaml',
-        help='Configuration yaml file. '
-             'See the docs for details. ',
+    config = cli(
+        cls='litmon.cli.pos.PositiveQuerier',
+        description='Build dabase of positive (target) articles',
+        default=['user'],
     )
-    args = parser.parse_args()
-
-    # load configuration
-    config = yaml.safe_load(open(args.config_fname, 'r'))
-
-    # load pmids
-    pmids = open(config['fname']['pmids']).read().splitlines()
-
-    # create database
-    PositiveQuerier(
-        fname=config['fname']['pos'],
-        pmids=pmids,
-        **config['user'],
-        **config['kwargs']['query'],
-        **config['kwargs']['pos'],
-    )
+    PositiveQuerier(**config)
