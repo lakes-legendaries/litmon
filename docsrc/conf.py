@@ -1,6 +1,6 @@
 # basic info
 project = 'litmon'
-version = '0.0.12'
+version = '0.0.13'
 copyright = '2021 Lake\'s Legendaries LLC'
 author = 'Mike Powell PhD'
 
