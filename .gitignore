@@ -1,3 +1,6 @@
+# azure
+cmd/azcopy
+
 # build folders
 /build
 /*.egg-info

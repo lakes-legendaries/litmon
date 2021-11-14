@@ -1,0 +1,31 @@
+#!/bin/bash
+# prepare environment to use azcopy
+#
+# checks that AZURE_TOKEN is set
+# sets AZURE_URL
+# downloads azcopy (if DNE)
+#
+# call in your local scope:
+#   > . cmd/env
+
+# exit on error
+set -e
+
+# check for AZURE_TOKEN
+if [ -z "$AZURE_TOKEN" ]; then
+    echo "ERROR: AZURE_TOKEN must be set"
+    exit 1
+fi
+
+# set url
+AZURE_URL=https://mfoundation.blob.core.windows.net/litmon
+
+# download azcopy
+if [ ! -f cmd/azcopy ]; then
+    cd cmd
+    wget -O azcopy_v10.tar.gz https://aka.ms/downloadazcopy-v10-linux
+    tar -xf azcopy_v10.tar.gz --strip-components=1
+    rm NOTICE.txt
+    rm azcopy_v10.tar.gz
+    cd ..
+fi

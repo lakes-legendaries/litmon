@@ -1,0 +1,28 @@
+#!/bin/bash
+# upload $1 to azure, then update directory listing
+#
+# example:
+#   > AZURE_TOKEN=$(cat ~/secrets/azure) cmd/upload fname
+#
+# set SKIP_DIRECTORY_UPDATE to skip updating directory listing
+
+# exit on error
+set -e
+
+# check args
+if [ $# -ne 1 ]; then
+    echo "Usage:"
+    echo "  > AZURE_TOKEN=... cmd/upload fname"
+    exit 0
+fi
+
+# setup env
+. cmd/env
+
+# upload
+cmd/azcopy copy "$1" "$AZURE_URL/$(basename $1)?$AZURE_TOKEN"  1> /dev/null
+
+# update directory
+if [ -z "$SKIP_DIRECTORY_UPDATE" ]; then
+    . cmd/update_directory
+fi

@@ -1,0 +1,41 @@
+#!/bin/bash
+# create directory listing, with hyperlinks, for Azure-hosted results page
+#
+# requires that AZURE_TOKEN be set as environmental variable
+
+# exit on error
+set -e
+
+# setup env
+. cmd/env
+
+# make temporary file
+OFNAME=directory.html
+rm -f $OFNAME
+touch $OFNAME
+
+# pull file list from server
+FILES=$(cmd/azcopy list $AZURE_URL | grep -Po " (.+);")
+
+# make listing
+for FILE in $FILES; do
+    
+    # strip trailing semicolon
+    FILE=${FILE::-1}
+
+    # don't list the directory
+    if [ "$FILE" == "$OFNAME" ]; then
+        continue
+    fi
+
+    # add hyperlink to listing
+    echo "<a href="$AZURE_URL/$FILE">$FILE</a><br>" >> $OFNAME
+done
+
+cat $OFNAME
+
+# upload file
+SKIP_DIRECTORY_UPDATE=1 AZURE_TOKEN=$AZURE_TOKEN cmd/upload $OFNAME
+
+# clean up
+rm $OFNAME
