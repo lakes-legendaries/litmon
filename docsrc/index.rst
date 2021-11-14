@@ -11,6 +11,9 @@ the field of longevity.
 
 Check out this repo on `GitHub <https://github.com/lakes-legendaries/litmon>`_!
 
+Results from running this algorithm are posted on our `Azure cloud
+<https://mfoundation.blob.core.windows.net/litmon/directory.html>`_.
+
 *****************
 Table Of Contents
 *****************

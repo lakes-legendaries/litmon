@@ -1,0 +1,22 @@
+#!/bin/bash
+# deletes generated files to clean out your directory
+
+# ask for confirmation
+read -p "This will delete all cli output files. [Y] to continue" -n 1 -r && echo
+
+# delete files
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    # delete data files
+    rm data/*.bin
+    rm data/*.csv
+    rm data/*.npy
+    rm data/*.pickle
+    rm data/*.txt
+    rm data/*.xlsx
+
+    # delete docs
+    rm -rfd docs
+
+    # delete logs
+    rm logs/*.log
+fi

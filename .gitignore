@@ -5,6 +5,9 @@ azure/azcopy
 /build
 /*.egg-info
 
+# configs
+config/20*
+
 # data files
 /data*/*
 /logs/*

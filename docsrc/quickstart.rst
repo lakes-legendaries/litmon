@@ -35,6 +35,12 @@ or obtain the required data files.
       python -m pip install --upgrade pip
       python -m pip install -r requirements.txt
 
+#. If you are not the original author of this package, please update the
+   :code:`user::email` field in :code:`config/std.yaml`. If you are not using
+   this package for its original purpose, please update the :code:`user::tool`
+   field. These can be set to any arbitrary value, and are supplied to the
+   PubMed API on each query.
+
 #. For this pipeline to work, you will need a list of positive (target)
    articles to use as training data.
    
@@ -115,7 +121,7 @@ articles in the scientific literature.
 
    .. code-block:: bash
 
-      python litmon/cli/dbase.py -f user dbase_eval
+      python litmon/cli/dbase.py -f query user dbase_eval
    
    This will output your database to :code:`data/dbase_eval.csv`. Progress will
    be logged to :code:`logs/dbase_eval.log`.
@@ -138,6 +144,6 @@ articles in the scientific literature.
 
       python litmon/cli/rez.py
 
-   The most relevant articles will be written to :code:`data/results.csv`.
+   The most relevant articles will be written to :code:`data/results.xlsx`.
 
    For more information, check out the :ref:`model` page.

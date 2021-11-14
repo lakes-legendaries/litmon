@@ -10,3 +10,6 @@ the foundation's leadership to make them aware of new and emerging research in
 the field of longevity.
 
 To get started, check out the `docs <https://lakes-legendaries.github.io/litmon/>`_!
+
+Results from running this algorithm are posted on our `Azure cloud
+<https://mfoundation.blob.core.windows.net/litmon/directory.html>`_.

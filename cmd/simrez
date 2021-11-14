@@ -1,0 +1,46 @@
+#!/bin/bash
+# get simulated results, upload to cloud server
+# AZURE_TOKEN must be set
+# using model trained 2013-2018
+# evaluated 2019-2020
+# expects model is pre-trained (e.g. w/ config/std.config)
+
+# check env
+. azure/env
+
+# check for model
+if [ ! -f "data/model.bin" ]; then
+    echo "ERROR! Model files not found"
+    echo "This script expects a pre-trained model"
+    exit 1
+fi
+
+# run configs
+for YEAR in 2019 2020; do
+    for MONTH in {1..12}; do
+
+        # get fnames / text strings
+        YM_TEXT=$YEAR-$(printf "%02d\n" $MONTH)
+        CONFIG=config/$YM_TEXT.yaml
+
+        # make config
+        python litmon/utils/config.py -m $MONTH -y $YEAR
+
+        # run config
+        python litmon/cli/dbase.py -c $CONFIG -f \
+            user \
+            query \
+            dbase_eval \
+            dbase_fname
+        python litmon/cli/eval.py -c $CONFIG -f \
+            dbase_fname \
+            scores_fname
+        python litmon/cli/rez.py -c $CONFIG -f \
+            dbase_fname \
+            scores_fname \
+            rez_fname
+
+        # upload to azure
+        AZURE_TOKEN=$AZURE_TOKEN azure/upload data/$YM_TEXT.xlsx
+    done
+done

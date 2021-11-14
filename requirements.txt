@@ -49,3 +49,4 @@ toml==0.10.2
 typish==1.9.3
 urllib3==1.26.7
 vhash @ git+https://github.com/lakes-legendaries/vhash.git@8ee87458c35a0b1e6024916daefa5c7f2a8c6db0
+XlsxWriter==3.0.2

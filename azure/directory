@@ -32,8 +32,6 @@ for FILE in $FILES; do
     echo "<a href="$AZURE_URL/$FILE">$FILE</a><br>" >> $OFNAME
 done
 
-cat $OFNAME
-
 # upload file
 SKIP_DIRECTORY_UPDATE=1 AZURE_TOKEN=$AZURE_TOKEN azure/upload $OFNAME
 

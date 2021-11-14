@@ -104,7 +104,7 @@ def test():
 
         # check results
         rez = read_csv('data/results.csv')
-        assert(rez.shape[1] == dbase.shape[1] + 1)
+        assert(rez.shape[1] == dbase.shape[1] + 2)
         assert(rez.shape[0] == 30)
         assert(
             isclose(

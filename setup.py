@@ -28,6 +28,7 @@ if __name__ == '__main__':
             'retry',
             'sklearn',
             'vhash @ git+https://github.com/lakes-legendaries/vhash.git',
+            'xlsxwriter',
         ],
         python_requires='>=3.9',
     )

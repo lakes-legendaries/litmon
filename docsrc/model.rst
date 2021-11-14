@@ -87,10 +87,12 @@ To write the top-scoring (most relevant) articles to file, use
    python litmon/cli/rez.py
 
 This constructs :class:`litmon.cli.rez.ResultsWriter`, and outputs the most
-relevant articles to :code:`data/results.csv`.
+relevant articles to :code:`data/results.csv` and :code:`data/results.xlsx`.
+(We recommend using the :code:`.xlsx` file because it will be formatted more
+nicely.)
 
 The number of articles written can be customized in the :code:`config/std.yaml`
-file (e.g. by adding :code:`rez: {num_write: 30}` to :code:`config/std.yaml`
+file (e.g. by adding :code:`rez: {num_write: 100}` to :code:`config/std.yaml`
 and calling the above script with the :code:`-f rez` flag).
 
 *************
