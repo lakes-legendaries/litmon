@@ -52,28 +52,25 @@ def test_scoring():
 
 def test_io():
 
-    # temporary file
-    dbase_fname = 'tests/dbase_fit.csv'
+    # temporary files
+    dbase_fit_fname = 'tests/dbase_fit.csv'
+    dbase_eval_fname = 'tests/dbase_eval.csv'
     model_fname = 'tests/model'
 
     # run test
     try:
-        # create fit dataset
-        get_fit_data().to_csv(dbase_fname)
+        # create datasets
+        get_fit_data().to_csv(dbase_fit_fname)
+        get_eval_data().to_csv(dbase_eval_fname)
 
-        # train model, save to file
-        model = ArticleScorer(use_cols=['1', '2']).fit(dbase_fname)
+        # train model, get scores, save to file
+        model = ArticleScorer(use_cols=['1', '2']).fit(dbase_fit_fname)
+        scores = model.predict(dbase_eval_fname)
         model.save(model_fname)
 
-        # load model from file
+        # load model from file, get scores
         model2 = ArticleScorer.load(model_fname)
-
-        # get eval dataset
-        get_eval_data().to_csv(dbase_fname)
-
-        # get scores
-        scores = model.predict(dbase_fname)
-        scores2 = model2.predict(dbase_fname)
+        scores2 = model2.predict(dbase_eval_fname)
 
         # check results
         assert(len(scores) == len(scores2))
@@ -81,7 +78,8 @@ def test_io():
 
     # remove temporary file
     finally:
-        remove(dbase_fname)
+        remove(dbase_fit_fname)
+        remove(dbase_eval_fname)
         remove(f'{model_fname}.bin')
         remove(f'{model_fname}.pickle')
 
