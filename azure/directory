@@ -7,7 +7,7 @@
 set -e
 
 # setup env
-. cmd/env
+. azure/env
 
 # make temporary file
 OFNAME=directory.html
@@ -15,7 +15,7 @@ rm -f $OFNAME
 touch $OFNAME
 
 # pull file list from server
-FILES=$(cmd/azcopy list $AZURE_URL | grep -Po " (.+);")
+FILES=$(azure/azcopy list $AZURE_URL | grep -Po " (.+);")
 
 # make listing
 for FILE in $FILES; do
@@ -35,7 +35,7 @@ done
 cat $OFNAME
 
 # upload file
-SKIP_DIRECTORY_UPDATE=1 AZURE_TOKEN=$AZURE_TOKEN cmd/upload $OFNAME
+SKIP_DIRECTORY_UPDATE=1 AZURE_TOKEN=$AZURE_TOKEN azure/upload $OFNAME
 
 # clean up
 rm $OFNAME

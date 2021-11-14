@@ -1,5 +1,5 @@
 # azure
-cmd/azcopy
+azure/azcopy
 
 # build folders
 /build
