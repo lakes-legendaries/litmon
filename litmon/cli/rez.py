@@ -61,7 +61,7 @@ class ResultsWriter:
             # extract missed articles
             fn = (~extract_me * dbase['label']).to_numpy().astype(bool)
             mdf = dbase.iloc[fn, :].reset_index(drop=True)
-            mdf.loc[:, 'scores'] = scores[fn]
+            mdf.loc[:, 'scores'] = scores[idx[fn]]
             mdf.loc[:, 'label2'] = ['' for _ in range(mdf.shape[0])]
 
             # append dfs
