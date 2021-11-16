@@ -27,4 +27,4 @@ from litmon.model import ArticleScorer
 from litmon.query import PubMedQuerier
 
 
-__version__ = '0.0.15'
+__version__ = '0.0.16'
