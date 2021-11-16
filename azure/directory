@@ -1,7 +1,6 @@
 #!/bin/bash
-# create directory listing, with hyperlinks, for Azure-hosted results page
-#
-# requires that AZURE_TOKEN be set as environmental variable
+# create directory listing, with hyperlinks, for Azure-hosted results page (for
+# public bucket)
 
 # exit on error
 set -e
@@ -15,7 +14,7 @@ rm -f $OFNAME
 touch $OFNAME
 
 # pull file list from server
-FILES=$(azure/azcopy list $AZURE_URL | grep -Po " (.+);")
+FILES=$(azure/azcopy list $AZURE_PUBLIC_URL | grep -Po " (.+);")
 
 # make listing
 for FILE in $FILES; do
@@ -29,11 +28,11 @@ for FILE in $FILES; do
     fi
 
     # add hyperlink to listing
-    echo "<a href="$AZURE_URL/$FILE">$FILE</a><br>" >> $OFNAME
+    echo "<a href="$AZURE_PUBLIC_URL/$FILE">$FILE</a><br>" >> $OFNAME
 done
 
 # upload file
-SKIP_DIRECTORY_UPDATE=1 AZURE_TOKEN=$AZURE_TOKEN azure/upload $OFNAME
+SKIP_DIRECTORY_UPDATE=1 azure/upload $OFNAME
 
 # clean up
 rm $OFNAME

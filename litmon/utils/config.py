@@ -16,13 +16,25 @@ if __name__ == '__main__':
         '-m',
         '--month',
         type=int,
-        default='Month (1-12) to use as eval set'
+        default='Month (1-12) to use as eval set',
     )
     parser.add_argument(
         '-y',
         '--year',
         type=int,
-        default='Year (e.g. 2020) to use as eval set'
+        default='Year (e.g. 2020) to use as eval set',
+    )
+    parser.add_argument(
+        '-s',
+        '--string',
+        nargs='+',
+        type=str,
+        default=[],
+        help="""
+        Arbitrary string key-value pairs to add to the output config file.
+        Arg 2n is a key, arg 2n+1 is the value for the preceding key.
+        All values will be interpretted as strings.
+        """,
     )
 
     # parse arguments
@@ -58,6 +70,10 @@ if __name__ == '__main__':
         },
         'query': std_config['query'],
     }
+
+    # add in extra args
+    for n in range(0, len(args.string), 2):
+        config[args.string[n]] = args.string[n+1]
 
     # write to file
     yaml.dump(config, open(fname, 'w'))

@@ -11,7 +11,6 @@ config/20*
 # data files
 /data*/*
 /logs/*
-!**/.gitkeep
 
 # documents
 /docs
@@ -19,8 +18,14 @@ config/20*
 # ide files
 /.vscode
 
+# secrets
+secrets/*
+
 # test files
 **/__pycache__
 
 # virtual environments
 /.venv
+
+# .gitkeep
+!**/.gitkeep

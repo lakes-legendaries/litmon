@@ -18,3 +18,17 @@ Contributing to this Repo
    number.
 
 #. Pull requests are welcome.
+
+#. If you are using this repo in support of the Methuselah Foundation, you may
+   want to access our azure cloud, which is where we publish results and store
+   private data files.
+   
+   To interface with the azure cloud, you'll need two key files:
+
+   #. secrets/azure-public
+   #. secrets/azure-private
+   
+   The former lets you upload results, while the latter lets you interface with
+   private data files.
+
+   Contact the owner of this repo for credentials.

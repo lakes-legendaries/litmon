@@ -2,21 +2,31 @@
 # deletes generated files to clean out your directory
 
 # ask for confirmation
-read -p "This will delete all cli output files. [Y] to continue" -n 1 -r && echo
+read -p "This will delete all cli output files. [Y] to continue: " -n 1 -r && echo
 
 # delete files
 if [[ $REPLY =~ ^[Yy]$ ]]; then
+
     # delete data files
-    rm data/*.bin
-    rm data/*.csv
-    rm data/*.npy
-    rm data/*.pickle
-    rm data/*.txt
-    rm data/*.xlsx
+    rm -f data/*.bin
+    rm -f data/*.csv
+    rm -f data/*.npy
+    rm -f data/*.pickle
+    rm -f data/*.txt
+    rm -f data/*.xlsx
 
     # delete docs
     rm -rfd docs
 
     # delete logs
-    rm logs/*.log
+    rm -f logs/*.log
+
+    # delete extra configs
+    rm -f config/20*
+
+    # delete build files
+    rm -rfd build *.egg-info
+
+    # delete azcopy
+    rm -f cmd/azcopy
 fi

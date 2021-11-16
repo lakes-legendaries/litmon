@@ -39,8 +39,10 @@ Articles are then vectorized using the `vhash
 <https://lakes-legendaries.github.io/vhash/>`_ package.
 
 Once all fitting articles have been vectorized, we build and train a machine
-learning model to find the articles most relevant to aging research. In this
-package, We use a :code:`sklearn.svm.LinearSVR` model.
+learning model to find the articles most relevant to aging research. The
+default model to use is :code:`sklearn.network.MLPRegressor`, but you can
+specify any import-able machine learning model that is compliant to the sklearn
+api.
 
 Finally, after training the ML model, all articles in the evaluation set can be
 vectorized, and then scored via the ML model. The top-scoring models can then
@@ -92,7 +94,7 @@ relevant articles to :code:`data/results.csv` and :code:`data/results.xlsx`.
 nicely.)
 
 The number of articles written can be customized in the :code:`config/std.yaml`
-file (e.g. by adding :code:`rez: {num_write: 100}` to :code:`config/std.yaml`
+file (e.g. by adding :code:`rez: {count: 100}` to :code:`config/std.yaml`
 and calling the above script with the :code:`-f rez` flag).
 
 *************

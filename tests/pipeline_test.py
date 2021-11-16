@@ -86,7 +86,11 @@ def test():
         assert(dbase['index'].max() + 1 == dbase.shape[0])
 
         # train model
-        ModelFitter(chunk_size=10)
+        ModelFitter(
+            chunk_size=10,
+            ml_model='sklearn.svm.LinearSVR',
+            ml_kwargs={},
+        )
 
         # use model to score articles
         ModelUser()
@@ -99,7 +103,7 @@ def test():
         # write results
         ResultsWriter(
             chunk_size=10,
-            num_write=30,
+            count=30,
         )
 
         # check results

@@ -34,7 +34,10 @@ def test_scoring():
         get_fit_data().to_csv(dbase_fname)
 
         # train model
-        model = ArticleScorer(use_cols=['1', '2']).fit(dbase_fname)
+        model = ArticleScorer(
+            ml_model='sklearn.svm.LinearSVR',
+            use_cols=['1', '2'],
+        ).fit(dbase_fname)
 
         # create eval dataset
         get_eval_data().to_csv(dbase_fname)
@@ -64,7 +67,10 @@ def test_io():
         get_eval_data().to_csv(dbase_eval_fname)
 
         # train model, get scores, save to file
-        model = ArticleScorer(use_cols=['1', '2']).fit(dbase_fit_fname)
+        model = ArticleScorer(
+            ml_model='sklearn.svm.LinearSVR',
+            use_cols=['1', '2'],
+        ).fit(dbase_fit_fname)
         scores = model.predict(dbase_eval_fname)
         model.save(model_fname)
 

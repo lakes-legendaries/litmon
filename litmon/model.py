@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from importlib import import_module
 import pickle
 from random import random
 from typing import Any
@@ -9,7 +10,6 @@ from typing import Any
 from nptyping import NDArray
 from numpy import array
 from pandas import DataFrame, read_csv
-from sklearn.svm import LinearSVR
 from vhash import VHash
 
 
@@ -17,14 +17,15 @@ class ArticleScorer:
     """Score journal articles based on their similarity to a training set
 
     This class vectorizes labeled (True/False, i.e. target/non-target) journal
-    articles with :code:`vhash.VHash`, and then predicts scores with
-    :code:`sklearn.svm.LinearSVR`.
+    articles with :code:`vhash.VHash`, and then predicts scores with a machine
+    learning model (default :code:`sklearn.neural_network.MLPRegressor`).
 
     This class is designed to work with large datasets that cannot be loaded
     into memory all at once. During training, it iterates through a largely
     unbalanced dataset and extracts a much smaller balanced fitting set. During
     testing, it breaks the dataset into chunks and computes scores on each
-    chunk individually.
+    chunk individually. To accomodate this behavior, it takes as arguments file
+    names instead of numpy arrays or dataframes.
 
     Parameters
     ----------
@@ -33,11 +34,12 @@ class ArticleScorer:
         articles * :code:`balance_ratio`
     chunk_size: int, optional, default=10E3
         number of articles to process from :code:`dbase_fname` at once
-    max_iter: int, optional, default=1E6
-        :code:`max_iter` for :code:`sklearn.svm.LinearSVR`
+    ml_model: str, optional, default='sklearn.neural_network.MLPRegressor'
+        name of machine learning model to use. You can specify any machine
+        learning model that is installed in your local environment, as long as
+        it is compliant to the sklearn api.
     ml_kwargs: dict, optional, default={}
-        passed to :code:`sklearn.svm.LinearSVR` on :code:`__init__()`. do NOT
-        include :code:`max_iter`
+        passed to :code:`ml_model` on :code:`__init__()`
     use_cols: list[str], optional, default=None
         Article columns to use. If None, use:
 
@@ -55,7 +57,7 @@ class ArticleScorer:
 
     Attributes
     ----------
-    model: sklearn.svm.LinearSVR
+    model: Type[ml_model]
         ml model for scoring
     vhash: vhash.VHash
         vectorizing hash table
@@ -66,7 +68,7 @@ class ArticleScorer:
         *,
         balance_ratio: float = 3,
         chunk_size: int = 10E3,
-        max_iter: int = 1E6,
+        ml_model: str = 'sklearn.neural_network.MLPRegressor',
         ml_kwargs: dict = {},
         use_cols: list[str] = None,
         vhash_kwargs: dict = {},
@@ -87,7 +89,7 @@ class ArticleScorer:
         # save parameters
         self._balance_ratio = balance_ratio
         self._chunk_size = chunk_size
-        self._max_iter = max_iter
+        self._ml_model = ml_model
         self._ml_kwargs = ml_kwargs
         self._use_cols = use_cols
         self._vhash_kwargs = vhash_kwargs
@@ -105,6 +107,10 @@ class ArticleScorer:
         ArticleScorer
             Calling instance
         """
+
+        # import ml class
+        ml_module, ml_class = self._ml_model.rsplit('.', maxsplit=1)
+        ml_class = getattr(import_module(ml_module), ml_class)
 
         # get article count
         num_pos = 0
@@ -136,10 +142,7 @@ class ArticleScorer:
         vectorized = self.vhash.transform(text)
 
         # train ml model
-        self.model = LinearSVR(
-            max_iter=self._max_iter,
-            **self._ml_kwargs,
-        ).fit(vectorized, labels)
+        self.model = ml_class(**self._ml_kwargs).fit(vectorized, labels)
 
         # return
         return self

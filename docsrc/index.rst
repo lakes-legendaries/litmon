@@ -11,8 +11,11 @@ the field of longevity.
 
 Check out this repo on `GitHub <https://github.com/lakes-legendaries/litmon>`_!
 
-Results from running this algorithm are posted on our `Azure cloud
-<https://mfoundation.blob.core.windows.net/litmon/directory.html>`_.
+Results from running this algorithm can be viewed on the `results page
+<https://lakes-legendaries.github.io/litmon/results.html>`_.
+
+If you will be contributing to this repo, check out the `developer's guide
+<https://lakes-legendaries.github.io/litmon/dev.html>`_.
 
 *****************
 Table Of Contents
@@ -25,4 +28,5 @@ Table Of Contents
    mbox
    dbase
    model
+   results
    dev
