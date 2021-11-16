@@ -6,7 +6,9 @@ Algorithm Results
 Results List
 ************
 
-Results of running this repo can be downloaded from any of the links below:
+Results from running this algorithm can be downloaded from any of the links
+below. These files list the top-scoring (most relevant) articles that the
+algorithm found in the specified time periods.
 
 .. raw:: html
 
