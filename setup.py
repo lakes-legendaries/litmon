@@ -27,7 +27,7 @@ if __name__ == '__main__':
             'PyYAML',
             'retry',
             'sklearn',
-            'vhash @ git+https://github.com/lakes-legendaries/vhash.git',
+            'vhash',
             'xlsxwriter',
         ],
         python_requires='>=3.9',
