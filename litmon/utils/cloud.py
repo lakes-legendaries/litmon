@@ -76,8 +76,8 @@ class Azure:
         /,
         file: str,
         *,
+        private: bool,
         dest: str = '',
-        private: bool = False,
     ):
         """Download file from Azure
 
@@ -85,10 +85,10 @@ class Azure:
         ----------
         file: str
             file to download
+        private: bool
+            whether to download from private or public container
         dest: str, optional, default=''
             destination directory
-        private: bool, optional, default=False
-            whether to download from private or public container
         """
         bclient: BlobClient = self.client.get_blob_client(
             container=self._get_container(private),
@@ -102,7 +102,7 @@ class Azure:
         /,
         file: str,
         *,
-        private: bool = False,
+        private: bool,
         update_listing: bool = True,
     ):
         """Upload file to Azure
@@ -126,7 +126,7 @@ class Azure:
 
         # upload file
         with open(file, 'rb') as data:
-            bclient.upload_blob(data)
+            bclient.upload_blob(data, private=False)
 
         # update directory listing
         if update_listing and not private:
