@@ -29,51 +29,56 @@ class Azure:
     client: BlobServiceClient
         client for interfacing with Azure
     """
-    def __init__(
-        self,
-        /,
-        private_container: str = 'litmon-private',
-        public_container: str = 'litmon',
-        secrets_fname: str = 'secrets/azure',
-    ):
-        # save passed
-        self._public_container = public_container
-        self._private_container = private_container
 
-        # load connection string
-        try:
-            connection_str = open(secrets_fname, 'r').read().strip()
-        except FileNotFoundError:
-            raise FileNotFoundError(re.sub(r'\s{2,}', ' ', f"""
-                Couldn't find {secrets_fname}, which is requied to access Azure
-                resources. Contact the administrator of this package to obtain
-                access.
-            """))
+    """Azure public container"""
+    public_container: str = 'litmon'
 
-        # activate client
-        self.client = BlobServiceClient.from_connection_string(connection_str)
+    """Azure private container"""
+    private_container: str = 'litmon-private'
 
-    def _get_container(self, /, private: bool) -> str:
-        """Get container name
+    """Azure resource URL"""
+    resource_url: str = 'https://mfoundation.blob.core.windows.net'
 
-        Parameters
-        ----------
-        private: bool
-            whether you want the private or public container name
+    """Connection string file name"""
+    secrets_fname: str = 'secrets/azure'
+
+    @classmethod
+    def _connection_error(cls) -> str:
+        """Connection exception error message
 
         Returns
         -------
         str
-            name of requested container
+            error message
         """
-        return (
-            self._public_container
-            if not private
-            else self._private_container
-        )
+        return re.sub(r'\s{2,}', ' ', f"""
+            Couldn't find {cls.secrets_fname}, which is requied to access
+            Azure resources. Contact the administrator of this package to
+            obtain access.
+        """)
 
+    @classmethod
+    def _connect(cls) -> BlobServiceClient:
+        """Connect to Azure
+
+        Returns
+        -------
+        BlobSericeClient
+            Azure connection
+        """
+
+        # load connection string
+        try:
+            connection_str = open(cls.secrets_fname, 'r').read().strip()
+        except FileNotFoundError:
+            raise FileNotFoundError(cls._connection_error())
+
+        # return client
+        return BlobServiceClient.from_connection_string(connection_str)
+
+    @classmethod
     def download(
-        self,
+        cls,
         /,
         file: str,
         *,
@@ -94,17 +99,41 @@ class Azure:
         replace: bool, optional, default=False
             if :code:`dest/file` exists locally, then skip the download
         """
-        bclient: BlobClient = self.client.get_blob_client(
-            container=self._get_container(private),
-            blob=file,
-        )
-        fname = file if dest is None else join(dest, file)
-        if replace or not isfile(fname):
-            with open(fname, 'wb') as f:
-                f.write(bclient.download_blob().readall())
 
+        # check if file exists
+        fname = file if dest is None else join(dest, file)
+        if not replace and isfile(fname):
+            return
+
+        # try to connect to Azure
+        try:
+            client: BlobClient = cls._connect().get_blob_client(
+                container=(
+                    cls.private_container
+                    if private
+                    else cls.public_container
+                ),
+                blob=file,
+            )
+
+        # write error message
+        except FileNotFoundError:
+            if not replace:
+                raise FileNotFoundError(re.sub(r'\s{2,}', ' ', f"""
+                    File doesn't exist locally, and we couldn't connect to
+                    Azure. Either obtain a local copy of {file} or place an
+                    Azure connection string in {cls.secrets_fname}.
+                """))
+            else:
+                raise FileNotFoundError(cls._connection_error())
+
+        # download file
+        with open(fname, 'wb') as f:
+            f.write(client.download_blob().readall())
+
+    @classmethod
     def upload(
-        self,
+        cls,
         /,
         file: str,
         *,
@@ -116,8 +145,11 @@ class Azure:
         Parameters
         ----------
         file: str
-            file to upload
-        private: bool, optional, default=False
+            file to upload. This file will be uploaded as
+            :code:`basename(file)`. (I.e. it will NOT be uploaded to a
+            directory within the container, but rather to the container root
+            level.)
+        private: bool
             whether to upload to private or public container
         update_listing: bool, optional, default=True
             if True, and :code:`not private`, then update directory listing
@@ -125,25 +157,29 @@ class Azure:
         """
 
         # get client
-        bclient: BlobClient = self.client.get_blob_client(
-            container=self._get_container(private),
+        client: BlobClient = cls._connect().get_blob_client(
+            container=(
+                cls.private_container
+                if private
+                else cls.public_container
+            ),
             blob=basename(file),
         )
 
         # upload file
         with open(file, 'rb') as data:
-            bclient.upload_blob(data, private=False)
+            client.upload_blob(data, private=False)
 
         # update directory listing
         if update_listing and not private:
-            self._update_listing()
+            cls._update_listing()
 
+    @classmethod
     def _update_listing(
-        self,
+        cls,
         /,
         *,
-        temp_fname: str = 'directory.html',
-        url: str = 'https://mfoundation.blob.core.windows.net',
+        fname: str = 'directory.html',
     ):
         """Update the directory listing for the public container
 
@@ -152,36 +188,34 @@ class Azure:
 
         Parameters
         ----------
-        temp_fname: str, optional, default='directory.html'
+        fname: str, optional, default='directory.html'
             temporary filename for directory listing
-        url: str, optional, default='https://mfoundation.blob.core.windows.net'
-            storage account url
         """  # noqa
 
         # generate client
-        cclient: ContainerClient = self.client.get_container_client(
-            container=self._public_container
+        client: ContainerClient = cls._connect().get_container_client(
+            container=cls.public_container
         )
 
         # get file list
-        files = [file['name'] for file in cclient.list_blobs()]
+        files = [file['name'] for file in client.list_blobs()]
 
         # create html page
-        full_url = f'{url}/{self._public_container}'
-        with open(temp_fname, 'w') as fid:
+        container_url = f'{cls.resource_url}/{cls.public_container}'
+        with open(fname, 'w') as fid:
             for file in files:
-                if file == temp_fname:
+                if file == fname:
                     continue
                 print(
-                    f'<a href={full_url}/{file}>{file}</a><br>',
+                    f'<a href={container_url}/{file}>{file}</a><br>',
                     file=fid,
                 )
 
         # upload directory listing
-        self.upload(temp_fname, update_listing=False)
+        cls.upload(fname, update_listing=False)
 
         # clean up
-        remove(temp_fname)
+        remove(fname)
 
 
 if __name__ == '__main__':
@@ -225,6 +259,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '--replace',
         action='store_true',
+        default=None,
         help='(Download only:) If file exists locally, then skip download',
     )
     args = parser.parse_args()
@@ -246,6 +281,7 @@ if __name__ == '__main__':
         and key != 'upload'
         and key != 'download'
     }
+    print(kwargs)
 
     # run action
-    action(Azure(), **kwargs)
+    action(**kwargs)
