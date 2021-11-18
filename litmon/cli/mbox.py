@@ -9,6 +9,7 @@ from nptyping import NDArray
 from numpy import unique
 
 from litmon.utils.cli import cli
+from litmon.utils.cloud import Azure
 
 
 class PubMedIDExtractor:
@@ -36,6 +37,7 @@ class PubMedIDExtractor:
         # load mboxes
         mbox = []
         for fname in mbox_fname:
+            Azure.download(fname, private=True)
             mbox.extend(open(fname, 'r').readlines())
 
         # get pmids
