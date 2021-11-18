@@ -2,7 +2,7 @@
 
 from argparse import ArgumentParser
 from os import remove
-from os.path import basename, isfile, join
+from os.path import basename, isfile
 import re
 
 from azure.storage.blob import BlobClient, BlobServiceClient, ContainerClient
@@ -83,7 +83,6 @@ class Azure:
         file: str,
         *,
         private: bool,
-        dest: str = None,
         replace: bool = False,
     ):
         """Download file from Azure
@@ -94,15 +93,12 @@ class Azure:
             file to download
         private: bool
             whether to download from private or public container
-        dest: str, optional, default=None
-            destination directory
         replace: bool, optional, default=False
             if :code:`dest/file` exists locally, then skip the download
         """
 
         # check if file exists
-        fname = file if dest is None else join(dest, file)
-        if not replace and isfile(fname):
+        if not replace and isfile(file):
             return
 
         # try to connect to Azure
@@ -113,7 +109,7 @@ class Azure:
                     if private
                     else cls.public_container
                 ),
-                blob=file,
+                blob=basename(file),
             )
 
         # write error message
@@ -128,7 +124,7 @@ class Azure:
                 raise FileNotFoundError(cls._connection_error())
 
         # download file
-        with open(fname, 'wb') as f:
+        with open(file, 'wb') as f:
             f.write(client.download_blob().readall())
 
     @classmethod
@@ -263,12 +259,6 @@ if __name__ == '__main__':
         action='store_true',
         required=False,
         help='to/from public container',
-    )
-    parser.add_argument(
-        '--dest',
-        default=None,
-        required=False,
-        help='(Download only:) Download to this destination directory',
     )
     parser.add_argument(
         '--replace',
