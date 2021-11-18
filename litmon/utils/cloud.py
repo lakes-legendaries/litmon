@@ -2,7 +2,8 @@
 
 from argparse import ArgumentParser
 from os import remove
-from os.path import basename, join
+from os.path import basename, isfile, join
+import re
 
 from azure.storage.blob import BlobClient, BlobServiceClient, ContainerClient
 
@@ -43,11 +44,11 @@ class Azure:
         try:
             connection_str = open(secrets_fname, 'r').read().strip()
         except FileNotFoundError:
-            raise FileNotFoundError(f"""
-                ERROR: Couldn't find {secrets_fname}, which is requied to
-                access Azure resources. Contact the administrator of this
-                package to obtain access.
-            """)
+            raise FileNotFoundError(re.sub(r'\s{2,}', ' ', f"""
+                Couldn't find {secrets_fname}, which is requied to access Azure
+                resources. Contact the administrator of this package to obtain
+                access.
+            """))
 
         # activate client
         self.client = BlobServiceClient.from_connection_string(connection_str)
@@ -77,7 +78,8 @@ class Azure:
         file: str,
         *,
         private: bool,
-        dest: str = '',
+        dest: str = None,
+        replace: bool = False,
     ):
         """Download file from Azure
 
@@ -87,15 +89,19 @@ class Azure:
             file to download
         private: bool
             whether to download from private or public container
-        dest: str, optional, default=''
+        dest: str, optional, default=None
             destination directory
+        replace: bool, optional, default=False
+            if :code:`dest/file` exists locally, then skip the download
         """
         bclient: BlobClient = self.client.get_blob_client(
             container=self._get_container(private),
             blob=file,
         )
-        with open(join(dest, file), 'wb') as f:
-            f.write(bclient.download_blob().readall())
+        fname = file if dest is None else join(dest, file)
+        if replace or not isfile(fname):
+            with open(fname, 'wb') as f:
+                f.write(bclient.download_blob().readall())
 
     def upload(
         self,
@@ -216,6 +222,11 @@ if __name__ == '__main__':
         '--dest',
         help='(Download only:) Download to this destination directory',
     )
+    parser.add_argument(
+        '--replace',
+        action='store_true',
+        help='(Download only:) If file exists locally, then skip download',
+    )
     args = parser.parse_args()
 
     # check args
@@ -229,12 +240,12 @@ if __name__ == '__main__':
 
     # get kwargs
     kwargs = {
-        'file': args.file,
-        'private': True if args.private else False,
+        key: value for key, value in vars(args).items()
+        if value is not None
+        and key != 'public'
+        and key != 'upload'
+        and key != 'download'
     }
-    if args.dest:
-        kwargs['dest'] = args.dest
 
     # run action
-    azure = Azure()
-    action(azure, **kwargs)
+    action(Azure(), **kwargs)
