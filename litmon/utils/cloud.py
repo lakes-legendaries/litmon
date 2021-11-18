@@ -138,6 +138,7 @@ class Azure:
         file: str,
         *,
         private: bool,
+        replace: bool = True,
         update_listing: bool = True,
     ):
         """Upload file to Azure
@@ -151,6 +152,8 @@ class Azure:
             level.)
         private: bool
             whether to upload to private or public container
+        replace: bool, optional, default=True
+            replace existing file on server if it exists
         update_listing: bool, optional, default=True
             if True, and :code:`not private`, then update directory listing
             (with :meth:`_update_listing`) after uploading
@@ -166,9 +169,16 @@ class Azure:
             blob=basename(file),
         )
 
+        # delete existing
+        if client.exists():
+            if replace:
+                client.delete_blob()
+            else:
+                return
+
         # upload file
         with open(file, 'rb') as data:
-            client.upload_blob(data, private=False)
+            client.upload_blob(data)
 
         # update directory listing
         if update_listing and not private:
@@ -245,22 +255,27 @@ if __name__ == '__main__':
     parser.add_argument(
         '--private',
         action='store_true',
+        required=False,
         help='to/from private container',
     )
     parser.add_argument(
         '--public',
         action='store_true',
+        required=False,
         help='to/from public container',
     )
     parser.add_argument(
         '--dest',
+        default=None,
+        required=False,
         help='(Download only:) Download to this destination directory',
     )
     parser.add_argument(
         '--replace',
         action='store_true',
         default=None,
-        help='(Download only:) If file exists locally, then skip download',
+        required=False,
+        help='Replace existing file (local for download / server for upload)',
     )
     args = parser.parse_args()
 
@@ -281,7 +296,6 @@ if __name__ == '__main__':
         and key != 'upload'
         and key != 'download'
     }
-    print(kwargs)
 
     # run action
     action(**kwargs)
