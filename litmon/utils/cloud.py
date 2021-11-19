@@ -303,6 +303,10 @@ if __name__ == '__main__':
     # parse arguments
     parser = ArgumentParser('Upload to / download from Azure')
     parser.add_argument(
+        'file',
+        help='file name to upload/download',
+    )
+    parser.add_argument(
         '-u',
         '--upload',
         action='store_true',
@@ -315,12 +319,6 @@ if __name__ == '__main__':
         action='store_true',
         required=False,
         help='download file',
-    )
-    parser.add_argument(
-        '-f',
-        '--file',
-        required=True,
-        help='file name',
     )
     parser.add_argument(
         '--private',
