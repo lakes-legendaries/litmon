@@ -19,7 +19,6 @@ from litmon.cli.dbase import DBaseBuilder
 from litmon.cli.eval import ModelUser
 from litmon.cli.fit import ModelFitter
 from litmon.cli.mbox import PubMedIDExtractor
-from litmon.cli.pos import PositiveQuerier
 from litmon.cli.rez import ResultsWriter
 from litmon.utils.cli import cli
 from litmon.utils.dates import get_date, get_dates
