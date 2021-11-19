@@ -26,12 +26,12 @@ class DBaseBuilder(PubMedQuerier):
     balance_ratio: float, optional, default=5
         number negative (non-target) articles = number positive (target)
         articles * :code:`balance_ratio`. To turn off, set to 0.
-    suffix: str, optional, default=''
-        suffix appended to each output file.
-        :code:`output_fname=f'{output_dir}/{year:4d}-{month:02d}{suffix}.csv'`
-    output_dir: str, optional, default='data'
+    dbase_dir: str, optional, default='data'
         directory to output database files to.
-        :code:`output_fname=f'{output_dir}/{year:4d}-{month:02d}{suffix}.csv'`
+        :code:`dbase_fname=f'{dbase_dir}/{year}-{month:02d}{dbase_suffix}.csv'`
+    dbase_suffix: str, optional, default=''
+        suffix appended to each output file.
+        :code:`dbase_fname=f'{dbase_dir}/{year}-{month:02d}{dbase_suffix}.csv'`
     pmids_fname: str, optional, default='data/pmids.txt'
         file containing positive (target) pmids. This is used for labeling
         documents True/False.
@@ -50,8 +50,8 @@ class DBaseBuilder(PubMedQuerier):
         final_month: str,
         *,
         balance_ratio: float = 5,
-        suffix: str = '',
-        output_dir: str = 'data',
+        dbase_dir: str = 'data',
+        dbase_suffix: str = '',
         pmids_fname: str = 'data/pmids.txt',
         random_seed: int = 271828,
         verbose: bool = True,
@@ -139,7 +139,8 @@ class DBaseBuilder(PubMedQuerier):
                 articles.drop(index=drop_idx, inplace=True)
 
             # write to file
-            articles.to_csv(f'{output_dir}/{year:4d}-{month:02d}{suffix}.csv')
+            articles.to_csv(
+                f'{dbase_dir}/{year:4d}-{month:02d}{dbase_suffix}.csv')
 
             # write running status
             if verbose:
@@ -162,6 +163,6 @@ if __name__ == '__main__':
     config = cli(
         cls='litmon.cli.dbase.DBaseBuilder',
         description='Build database of articles',
-        default=['query', 'user', 'dbase_fit'],
+        default=['query', 'user', 'fit_dates', 'dbase_fit'],
     )
     DBaseBuilder(**config)

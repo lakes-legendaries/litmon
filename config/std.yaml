@@ -6,16 +6,20 @@ mbox_fname: [
   data/dump1.mbox,
   data/dump2.mbox,
 ]
-dbase_fit: {
+fit_dates: {
   first_month: 2013/01,
-  final_month: 2017/12,
-  suffix: -fit,
+  final_month: 2018/12,
+}
+eval_dates: {
+  first_month: 2019/01,
+  final_month: 2020/12,
+}
+dbase_fit: {
+  dbase_suffix: -fit,
 }
 dbase_eval: {
-  min_date: 2018/01/01,
-  max_date: 2018/01/31,
-  dbase_fname: data/dbase_eval.csv,
-  log_fname: logs/dbase_eval.log,
+  dbase_suffix: -eval,
+  balance_ratio: 0,
 }
 query: >-
   (english[la] OR hasabstract)
