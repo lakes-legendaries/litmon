@@ -110,7 +110,7 @@ class DBaseBuilder(PubMedQuerier):
                 qdate += timedelta(days=1)
 
             # reset indices
-            articles.reset_index(drop=True)
+            articles.reset_index(drop=True, inplace=True)
 
             # label articles positive / negative
             for _, article in articles.iterrows():
