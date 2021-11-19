@@ -32,6 +32,8 @@ class DBaseBuilder(PubMedQuerier):
     pmids_fname: str, optional, default='data/pmids.txt'
         file containing positive (target) pmids. This is used for labeling
         documents True/False.
+    verbose: bool, optional, default=True
+        write running status to console
     **kwargs: Any
         Passed to base class :class:`~litmon.query.PubMedQuerier`.
     """
@@ -45,6 +47,7 @@ class DBaseBuilder(PubMedQuerier):
         balance_ratio: float = 5,
         suffix: str = '',
         pmids_fname: str = 'data/pmids.txt',
+        verbose: bool = True,
         **kwargs
     ):
 
@@ -122,7 +125,15 @@ class DBaseBuilder(PubMedQuerier):
                 articles.drop(index=drop_idx, inplace=True)
 
             # write to file
-            articles.to_csv(f'data/{year}-{month}{suffix}.csv')
+            articles.to_csv(f'data/{year:4d}-{month:02d}{suffix}.csv')
+
+            # write running status
+            if verbose:
+                print(
+                    f'{year:4d}-{month:02d}: '
+                    f'{articles.shape[0]:4d} Articles '
+                    f'| {articles["label"].sum():3d} Positive'
+                )
 
             # increment month
             if month < 12:
