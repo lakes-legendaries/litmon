@@ -1,8 +1,8 @@
 """Easy Azure interface"""
 
 from argparse import ArgumentParser
-from os import remove
-from os.path import basename, isfile
+from os import listdir, remove
+from os.path import basename, dirname, isfile, join
 import re
 
 from azure.storage.blob import BlobClient, BlobServiceClient, ContainerClient
@@ -83,6 +83,7 @@ class Azure:
         file: str,
         *,
         private: bool,
+        regex: bool = False,
         replace: bool = False,
     ):
         """Download file from Azure
@@ -93,9 +94,33 @@ class Azure:
             file to download
         private: bool
             whether to download from private or public container
+        regex: bool, optional, default=False
+            treat :code:`file` as a regex expression. download all files that
+            match. all files will be downloaded to the same directory.
         replace: bool, optional, default=False
             if :code:`dest/file` exists locally, then skip the download
         """
+
+        # process regular expresion
+        if regex:
+
+            # download each file that matches pattern
+            [
+                cls.download(
+                    file=join(dirname(file), _file),
+                    private=private,
+                    regex=False,
+                    replace=replace,
+                )
+                for _file in cls._get_listing(file)
+                if re.search(
+                    basename(file),
+                    join(dirname(file), _file)
+                ) is not None
+            ]
+
+            # return to stop processing
+            return
 
         # check if file exists
         if not replace and isfile(file):
@@ -134,6 +159,7 @@ class Azure:
         file: str,
         *,
         private: bool,
+        regex: bool = False,
         replace: bool = True,
         update_listing: bool = True,
     ):
@@ -148,12 +174,38 @@ class Azure:
             level.)
         private: bool
             whether to upload to private or public container
+        regex: bool, optional, default=False
+            treat :code:`file` as a regex expression. upload all files that
+            match. all files must be in the same directory.
         replace: bool, optional, default=True
             replace existing file on server if it exists
         update_listing: bool, optional, default=True
             if True, and :code:`not private`, then update directory listing
             (with :meth:`_update_listing`) after uploading
         """
+
+        # process regular expresion
+        if regex:
+
+            # upload each file that matches pattern
+            [
+                cls.upload(
+                    file=join(dirname(file), _file),
+                    private=private,
+                    regex=False,
+                    replace=replace,
+                    update_listing=False,
+                )
+                for _file in listdir(dirname(file))
+                if re.search(file, join(dirname(file), _file)) is not None
+            ]
+
+            # update listing
+            if update_listing and not private:
+                cls._update_listing()
+
+            # return to stop processing
+            return
 
         # get client
         client: BlobClient = cls._connect().get_blob_client(
@@ -181,6 +233,33 @@ class Azure:
             cls._update_listing()
 
     @classmethod
+    def _get_listing(cls, private: bool) -> list[str]:
+        """Get list of files on server
+
+        Parameters
+        ----------
+        private: bool
+            whether to query public or private container
+
+        Returns
+        -------
+        list[str]
+            list of files
+        """
+
+        # generate client
+        client: ContainerClient = cls._connect().get_container_client(
+            container=(
+                cls.public_container
+                if not private
+                else cls.private_container
+            ),
+        )
+
+        # get file list
+        return [file['name'] for file in client.list_blobs()]
+
+    @classmethod
     def _update_listing(
         cls,
         /,
@@ -198,13 +277,8 @@ class Azure:
             temporary filename for directory listing
         """  # noqa
 
-        # generate client
-        client: ContainerClient = cls._connect().get_container_client(
-            container=cls.public_container
-        )
-
         # get file list
-        files = [file['name'] for file in client.list_blobs()]
+        files = cls._get_listing(private=False)
 
         # create html page
         container_url = f'{cls.resource_url}/{cls.public_container}'
@@ -259,6 +333,14 @@ if __name__ == '__main__':
         action='store_true',
         required=False,
         help='to/from public container',
+    )
+    parser.add_argument(
+        '--regex',
+        action='store_true',
+        default=None,
+        required=False,
+        help='Treat file as a regular expression '
+             '(upload/download all files that match)',
     )
     parser.add_argument(
         '--replace',
