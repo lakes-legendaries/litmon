@@ -2,7 +2,7 @@
 
 from copy import deepcopy
 from datetime import date, timedelta
-from random import random
+from random import random, seed
 import re
 
 from pandas import DataFrame
@@ -32,6 +32,8 @@ class DBaseBuilder(PubMedQuerier):
     pmids_fname: str, optional, default='data/pmids.txt'
         file containing positive (target) pmids. This is used for labeling
         documents True/False.
+    random_seed: int, optional, default=271828
+        random seed for :code:`random.seed()`. Set to 0 to turn off
     verbose: bool, optional, default=True
         write running status to console
     **kwargs: Any
@@ -47,9 +49,14 @@ class DBaseBuilder(PubMedQuerier):
         balance_ratio: float = 5,
         suffix: str = '',
         pmids_fname: str = 'data/pmids.txt',
+        random_seed: int = 271828,
         verbose: bool = True,
         **kwargs
     ):
+
+        # set seed
+        if random_seed >= 0:
+            seed(random_seed)
 
         # initialize base
         PubMedQuerier.__init__(self, **kwargs)
@@ -101,6 +108,9 @@ class DBaseBuilder(PubMedQuerier):
 
                 # increment day
                 qdate += timedelta(days=1)
+
+            # reset indices
+            articles.reset_index(drop=True)
 
             # label articles positive / negative
             for _, article in articles.iterrows():
