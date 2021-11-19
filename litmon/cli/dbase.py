@@ -1,14 +1,15 @@
 """Build database of articles"""
 
 from copy import deepcopy
-from datetime import date, datetime, timedelta
-from logging import basicConfig, info, INFO
+from datetime import date, timedelta
+from random import random
+import re
 
-from numpy import arange, zeros
 from pandas import DataFrame
 
 from litmon.query import PubMedQuerier
 from litmon.utils.cli import cli
+from litmon.utils.cloud import Azure
 
 
 class DBaseBuilder(PubMedQuerier):
@@ -18,14 +19,16 @@ class DBaseBuilder(PubMedQuerier):
     ----------
     query: str
         standard pubmed query for pulling these types of articles
-    min_date: str
-        first date to query, in format YYYY/MM/DD
-    max_date: str
-        last date to query, in format YYYY/MM/DD
-    dbase_fname: str
-        name of output file
-    log_fname: str, optional, default=logs/dbase.log
-        file to log progress to. If None, don't log
+    first_month: str
+        first month to query. Format: YYYY/mm
+    final_month: str
+        final month to query. Format: YYYY/mm
+    balance_ratio: float, optional, default=5
+        number negative (non-target) articles = number positive (target)
+        articles * :code:`balance_ratio`. To turn off, set to 0.
+    suffix: str, optional, default=''
+        suffix appended to each output file.
+        :code:`output_fname=f'{year}-{month}{suffix}.csv'`
     pmids_fname: str, optional, default='data/pmids.txt'
         file containing positive (target) pmids. This is used for labeling
         documents True/False.
@@ -36,11 +39,11 @@ class DBaseBuilder(PubMedQuerier):
         self,
         /,
         query: str,
-        min_date: str,
-        max_date: str,
-        dbase_fname: str,
+        first_month: str,
+        final_month: str,
         *,
-        log_fname: str = None,
+        balance_ratio: float = 5,
+        suffix: str = '',
         pmids_fname: str = 'data/pmids.txt',
         **kwargs
     ):
@@ -49,83 +52,84 @@ class DBaseBuilder(PubMedQuerier):
         PubMedQuerier.__init__(self, **kwargs)
 
         # load positive pmids
+        Azure.download(pmids_fname, private=True)
         pmids = open(pmids_fname).read().splitlines()
 
-        # setup logger
-        if log_fname is not None:
-
-            # clear out existing file
-            with open(log_fname, 'w'):
-                pass
-
-            # set basic logging parameters
-            basicConfig(
-                filename=log_fname,
-                level=INFO,
-            )
-
         # parse date arguments
-        min_date = datetime.strptime(min_date, '%Y/%m/%d').date()
-        max_date = datetime.strptime(max_date, '%Y/%m/%d').date()
+        first_year, first_month = \
+            (int(x) for x in re.findall(r'\d+', first_month))
+        final_year, final_month = \
+            (int(x) for x in re.findall(r'\d+', final_month))
 
-        # write file header
+        # get file header
         file_header = deepcopy(self.header)
-        file_header.insert(0, 'index')
         file_header.append('label')
-        DataFrame([], columns=file_header).to_csv(dbase_fname, index=False)
 
-        # run queries
-        count = 0
-        cur_date = min_date
-        while cur_date <= max_date:
+        # build database for each month
+        (year, month) = (first_year, first_month)
+        while (year, month) <= (final_year, final_month):
 
-            # create query
-            datestr = cur_date.strftime('%Y/%m/%d')
-            cur_query = f'{query} AND ({datestr} [edat])'
+            # initialize df
+            articles = DataFrame([], columns=file_header)
 
-            # run query
-            articles = self.query(cur_query)
+            # run query for each date
+            qdate = date(year, month, 1)
+            while qdate.month == month:
 
-            # remove articles with bad dates
-            keep_me = zeros(articles.shape[0], dtype=bool)
-            for n, (_, article) in enumerate(articles.iterrows()):
-                keep_me[n] = (
-                    type(article['publication_date']) is date
-                    and article['publication_date'] == cur_date
-                )
-            articles = articles.iloc[keep_me, :].reset_index()
+                # create query
+                datestr = qdate.strftime('%Y/%m/%d')
+                cur_query = f'{query} AND ({datestr} [edat])'
+
+                # run query
+                qarticles = self.query(cur_query)
+
+                # remove articles with bad dates
+                drop_idx = []
+                for idx, article in qarticles.iterrows():
+                    if not (
+                        type(article['publication_date']) is date
+                        and article['publication_date'] == qdate
+                    ):
+                        drop_idx.append(idx)
+                qarticles.drop(index=drop_idx, inplace=True)
+
+                # append to df
+                articles = articles.append(qarticles)
+
+                # increment day
+                qdate += timedelta(days=1)
 
             # label articles positive / negative
-            articles['label'] = 0
-            for n, (_, article) in enumerate(articles.iterrows()):
+            for _, article in articles.iterrows():
                 cur_pmid = article['pubmed_id']
                 cur_pmid = cur_pmid[0:min(len(cur_pmid), 8)]
-                articles.loc[n, 'label'] = any([
+                article['label'] = any([
                     cur_pmid == pmid
                     for pmid in pmids
                 ])
 
-            # increment index
-            articles['index'] = arange(articles.shape[0]) + count
-            count += articles.shape[0]
-
-            # append to file
-            articles.to_csv(
-                dbase_fname,
-                header=False,
-                index=False,
-                mode='a',
-            )
-
-            # log status
-            if log_fname is not None:
-                info(
-                    f'{datestr}: {articles.shape[0]:4g} Articles '
-                    f'/ {articles["label"].sum():2g} Positive'
+            # balance df
+            if balance_ratio > 0:
+                prob_incl = (
+                    balance_ratio
+                    * articles['label'].sum()
+                    / articles.shape[0]
                 )
+                drop_idx = []
+                for idx, article in articles.iterrows():
+                    if not article['label'] and random() > prob_incl:
+                        drop_idx.append(idx)
+                articles.drop(index=drop_idx, inplace=True)
 
-            # increment date
-            cur_date += timedelta(days=1)
+            # write to file
+            articles.to_csv(f'data/{year}-{month}{suffix}.csv')
+
+            # increment month
+            if month < 12:
+                month += 1
+            else:
+                month = 1
+                year += 1
 
 
 # command-line interface

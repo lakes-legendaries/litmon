@@ -7,10 +7,9 @@ mbox_fname: [
   data/dump2.mbox,
 ]
 dbase_fit: {
-  min_date: 2013/01/01,
-  max_date: 2017/12/31,
-  dbase_fname: data/dbase_fit.csv,
-  log_fname: logs/dbase_fit.log,
+  first_month: 2013/01,
+  final_month: 2017/12,
+  suffix: fit,
 }
 dbase_eval: {
   min_date: 2018/01/01,
