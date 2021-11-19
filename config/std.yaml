@@ -9,7 +9,7 @@ mbox_fname: [
 dbase_fit: {
   first_month: 2013/01,
   final_month: 2017/12,
-  suffix: fit,
+  suffix: -fit,
 }
 dbase_eval: {
   min_date: 2018/01/01,
