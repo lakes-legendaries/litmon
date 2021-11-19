@@ -13,7 +13,7 @@ from litmon.utils.cloud import Azure
 
 
 class DBaseBuilder(PubMedQuerier):
-    """Build database of articles
+    """Build database of articles for each month
 
     Parameters
     ----------
@@ -28,7 +28,10 @@ class DBaseBuilder(PubMedQuerier):
         articles * :code:`balance_ratio`. To turn off, set to 0.
     suffix: str, optional, default=''
         suffix appended to each output file.
-        :code:`output_fname=f'data/{year}-{month}{suffix}.csv'`
+        :code:`output_fname=f'{output_dir}/{year:4d}-{month:02d}{suffix}.csv'`
+    output_dir: str, optional, default='data'
+        directory to output database files to.
+        :code:`output_fname=f'{output_dir}/{year:4d}-{month:02d}{suffix}.csv'`
     pmids_fname: str, optional, default='data/pmids.txt'
         file containing positive (target) pmids. This is used for labeling
         documents True/False.
@@ -48,6 +51,7 @@ class DBaseBuilder(PubMedQuerier):
         *,
         balance_ratio: float = 5,
         suffix: str = '',
+        output_dir: str = 'data',
         pmids_fname: str = 'data/pmids.txt',
         random_seed: int = 271828,
         verbose: bool = True,
@@ -135,7 +139,7 @@ class DBaseBuilder(PubMedQuerier):
                 articles.drop(index=drop_idx, inplace=True)
 
             # write to file
-            articles.to_csv(f'data/{year:4d}-{month:02d}{suffix}.csv')
+            articles.to_csv(f'{output_dir}/{year:4d}-{month:02d}{suffix}.csv')
 
             # write running status
             if verbose:
