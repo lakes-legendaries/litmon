@@ -344,7 +344,7 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         '--replace',
-        action='store_true',
+        type=bool,
         default=None,
         required=False,
         help='Replace existing file (local for download / server for upload)',
