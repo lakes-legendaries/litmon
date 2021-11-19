@@ -28,7 +28,7 @@ class DBaseBuilder(PubMedQuerier):
         articles * :code:`balance_ratio`. To turn off, set to 0.
     suffix: str, optional, default=''
         suffix appended to each output file.
-        :code:`output_fname=f'{year}-{month}{suffix}.csv'`
+        :code:`output_fname=f'data/{year}-{month}{suffix}.csv'`
     pmids_fname: str, optional, default='data/pmids.txt'
         file containing positive (target) pmids. This is used for labeling
         documents True/False.
