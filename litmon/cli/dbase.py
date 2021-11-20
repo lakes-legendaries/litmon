@@ -1,5 +1,7 @@
 """Build database of articles"""
 
+from __future__ import annotations
+
 from copy import deepcopy
 from datetime import date, timedelta
 from random import random, seed
@@ -19,10 +21,8 @@ class DBaseBuilder(PubMedQuerier):
     ----------
     query: str
         standard pubmed query for pulling these types of articles
-    first_month: str
-        first month to query. Format: YYYY/mm
-    final_month: str
-        final month to query. Format: YYYY/mm
+    date_range: str
+        months to query. Format: YYYY/mm-YYYY/mm
     balance_ratio: float, optional, default=5
         number negative (non-target) articles = number positive (target)
         articles * :code:`balance_ratio`. To turn off, set to 0.
@@ -46,8 +46,7 @@ class DBaseBuilder(PubMedQuerier):
         self,
         /,
         query: str,
-        first_month: str,
-        final_month: str,
+        date_range: str,
         *,
         balance_ratio: float = 5,
         dbase_dir: str = 'data',
@@ -69,19 +68,12 @@ class DBaseBuilder(PubMedQuerier):
         Azure.download(pmids_fname, private=True)
         pmids = open(pmids_fname).read().splitlines()
 
-        # parse date arguments
-        first_year, first_month = \
-            (int(x) for x in re.findall(r'\d+', first_month))
-        final_year, final_month = \
-            (int(x) for x in re.findall(r'\d+', final_month))
-
         # get file header
         file_header = deepcopy(self.header)
         file_header.append('label')
 
         # build database for each month
-        (year, month) = (first_year, first_month)
-        while (year, month) <= (final_year, final_month):
+        for year, month in self.__class__.drange(date_range):
 
             # initialize df
             articles = DataFrame([], columns=file_header)
@@ -150,12 +142,58 @@ class DBaseBuilder(PubMedQuerier):
                     f'| {articles["label"].sum():3d} Positive'
                 )
 
+    @classmethod
+    def drange(cls, datestr: str, /) -> list[tuple(int, int)]:
+        """Transform datestring into list of dates
+
+        Each date covered in datestr is unpacked so that its year/month is
+        listed. E.g.
+
+        .. code-block:: python
+
+           cls.drange('2014/11-2015/01') == [
+               (2014, 11),
+               (2014, 12),
+               (2015, 1),
+           ]
+
+        Parameters
+        ----------
+        datestr: str
+            dates, in format YYYY/mm-YYYY/mm
+
+        Returns
+        -------
+        drange: list[tuple(int, int)]
+            list of year/month combos for each year/month in :code:`datestr`.
+            :code:`drange[0]=(year, month)` for the first month covered in
+            datestr.
+        """
+
+        # parse arguments
+        try:
+            first_year, first_month, final_year, final_month = \
+                (int(x) for x in re.findall(r'\d+', datestr))
+        except Exception:
+            raise ValueError('Required datestr format is YYYY/mm-YYYY/mm')
+
+        # make range
+        drange = []
+        (year, month) = (first_year, first_month)
+        while (now := (year, month)) <= (final_year, final_month):
+
+            # add to list
+            drange.append(now)
+
             # increment month
             if month < 12:
                 month += 1
             else:
                 month = 1
                 year += 1
+
+        # return
+        return drange
 
 
 # command-line interface

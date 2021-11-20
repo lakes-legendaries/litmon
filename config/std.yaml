@@ -7,12 +7,10 @@ mbox_fname: [
   data/dump2.mbox,
 ]
 fit_dates: {
-  first_month: 2013/01,
-  final_month: 2018/12,
+  date_range: 2013/01-2018/12,
 }
 eval_dates: {
-  first_month: 2019/01,
-  final_month: 2020/12,
+  date_range: 2019/01-2020/12,
 }
 dbase_fit: {
   dbase_suffix: -fit,
