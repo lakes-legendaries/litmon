@@ -5,13 +5,13 @@ from __future__ import annotations
 from copy import deepcopy
 from datetime import date, timedelta
 from random import random, seed
-import re
 
 from pandas import DataFrame
 
 from litmon.query import PubMedQuerier
 from litmon.utils.cli import cli
 from litmon.utils.cloud import Azure
+from litmon.utils.dates import drange
 
 
 class DBaseBuilder(PubMedQuerier):
@@ -30,8 +30,7 @@ class DBaseBuilder(PubMedQuerier):
         directory to output database files to.
         :code:`dbase_fname=f'{dbase_dir}/{year}-{month:02d}{dbase_suffix}.csv'`
     dbase_suffix: str, optional, default=''
-        suffix appended to each output file.
-        :code:`dbase_fname=f'{dbase_dir}/{year}-{month:02d}{dbase_suffix}.csv'`
+        suffix appended to each output file. See :code:`dbase_dir`
     pmids_fname: str, optional, default='data/pmids.txt'
         file containing positive (target) pmids. This is used for labeling
         documents True/False.
@@ -73,7 +72,7 @@ class DBaseBuilder(PubMedQuerier):
         file_header.append('label')
 
         # build database for each month
-        for year, month in self.__class__.drange(date_range):
+        for year, month in drange(date_range):
 
             # initialize df
             articles = DataFrame([], columns=file_header)
@@ -141,59 +140,6 @@ class DBaseBuilder(PubMedQuerier):
                     f'{articles.shape[0]:4d} Articles '
                     f'| {articles["label"].sum():3d} Positive'
                 )
-
-    @classmethod
-    def drange(cls, datestr: str, /) -> list[tuple(int, int)]:
-        """Transform datestring into list of dates
-
-        Each date covered in datestr is unpacked so that its year/month is
-        listed. E.g.
-
-        .. code-block:: python
-
-           cls.drange('2014/11-2015/01') == [
-               (2014, 11),
-               (2014, 12),
-               (2015, 1),
-           ]
-
-        Parameters
-        ----------
-        datestr: str
-            dates, in format YYYY/mm-YYYY/mm
-
-        Returns
-        -------
-        drange: list[tuple(int, int)]
-            list of year/month combos for each year/month in :code:`datestr`.
-            :code:`drange[0]=(year, month)` for the first month covered in
-            datestr.
-        """
-
-        # parse arguments
-        try:
-            first_year, first_month, final_year, final_month = \
-                (int(x) for x in re.findall(r'\d+', datestr))
-        except Exception:
-            raise ValueError('Required datestr format is YYYY/mm-YYYY/mm')
-
-        # make range
-        drange = []
-        (year, month) = (first_year, first_month)
-        while (now := (year, month)) <= (final_year, final_month):
-
-            # add to list
-            drange.append(now)
-
-            # increment month
-            if month < 12:
-                month += 1
-            else:
-                month = 1
-                year += 1
-
-        # return
-        return drange
 
 
 # command-line interface
