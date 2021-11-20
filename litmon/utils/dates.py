@@ -1,49 +1,58 @@
 """Module for parsing dates"""
 
-from datetime import date, datetime
-from typing import Any, Union
+from __future__ import annotations
 
-from nptyping import NDArray
-from numpy import array
-from pandas import Series
+import re
 
 
-def get_date(datestr: str) -> Union[date, None]:
-    """Convert datestr to date
+def drange(datestr: str, /) -> list[tuple(int, int)]:
+    """Transform datestring into list of dates
+
+    Each date covered in datestr is unpacked so that its year/month is
+    listed. E.g.
+
+    .. code-block:: python
+
+        cls.drange('2014/11-2015/01') == [
+            (2014, 11),
+            (2014, 12),
+            (2015, 1),
+        ]
 
     Parameters
     ----------
     datestr: str
-        date as str, in format YYYY-mm-dd or YYYY/mm/dd
+        dates, in format YYYY/mm-YYYY/mm
 
     Returns
     -------
-    date
-        formatted date, or None if is ill-formatted
+    drange: list[tuple(int, int)]
+        list of year/month combos for each year/month in :code:`datestr`.
+        :code:`drange[0]=(year, month)` for the first month covered in
+        datestr.
     """
-    datestr = datestr.replace('/', '-')
+
+    # parse arguments
     try:
-        return datetime.strptime(datestr, '%Y-%m-%d').date()
+        first_year, first_month, final_year, final_month = \
+            (int(x) for x in re.findall(r'\d+', datestr))
     except Exception:
-        return None
+        raise ValueError('Required datestr format is YYYY/mm-YYYY/mm')
 
+    # make range
+    drange = []
+    (year, month) = (first_year, first_month)
+    while (now := (year, month)) <= (final_year, final_month):
 
-def get_dates(datestr: Series) -> NDArray[(Any,), date]:
-    """Extract dates from a Series
+        # add to list
+        drange.append(now)
 
-    Parameters
-    ----------
-    datestr: Series of str
-        dates as str, in format YYYY-mm-dd or YYYY/mm/dd.
-        Any ill-formed dates will be discarded
+        # increment month
+        if month < 12:
+            month += 1
+        else:
+            month = 1
+            year += 1
 
-    Returns
-    -------
-    NDArray
-        extracted dates
-    """
-    dates = [
-        get_date(d)
-        for d in datestr
-    ]
-    return array([d for d in dates if d])
+    # return
+    return drange

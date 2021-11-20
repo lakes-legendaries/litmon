@@ -21,7 +21,7 @@ from litmon.cli.fit import ModelFitter
 from litmon.cli.mbox import PubMedIDExtractor
 from litmon.cli.rez import ResultsWriter
 from litmon.utils.cli import cli
-from litmon.utils.dates import get_date, get_dates
+from litmon.utils.dates import drange
 from litmon.model import ArticleScorer
 from litmon.query import PubMedQuerier
 
