@@ -25,58 +25,52 @@ def get_eval_data() -> DataFrame:
 
 def test_scoring():
 
-    # temporary file
-    dbase_fname = 'tests/dbase_fit.csv'
+    # create fit dataset
+    fit_data = get_fit_data()
 
-    # run test
-    try:
-        # create fit dataset
-        get_fit_data().to_csv(dbase_fname)
+    # train model
+    model = ArticleScorer(
+        ml_model='sklearn.svm.LinearSVR',
+        use_cols=['1', '2'],
+    ).fit(fit_data)
 
-        # train model
-        model = ArticleScorer(
-            ml_model='sklearn.svm.LinearSVR',
-            use_cols=['1', '2'],
-        ).fit(dbase_fname)
+    # create eval dataset
+    eval_data = get_eval_data()
 
-        # create eval dataset
-        get_eval_data().to_csv(dbase_fname)
+    # predict scores
+    scores = model.predict(eval_data)
 
-        # predict scores
-        scores = model.predict(dbase_fname)
-
-        # check results
-        assert(scores[2] < scores[0] < scores[1] < scores[3])
-
-    # remove temporary file
-    finally:
-        remove(dbase_fname)
+    # check results
+    assert(scores[2] < scores[0] < scores[1] < scores[3])
 
 
 def test_io():
 
     # temporary files
-    dbase_fit_fname = 'tests/dbase_fit.csv'
-    dbase_eval_fname = 'tests/dbase_eval.csv'
-    model_fname = 'tests/model'
+    model_fname = 'data/model-test'
 
     # run test
     try:
         # create datasets
-        get_fit_data().to_csv(dbase_fit_fname)
-        get_eval_data().to_csv(dbase_eval_fname)
+        fit_data = get_fit_data()
+        eval_data = get_eval_data()
 
         # train model, get scores, save to file
         model = ArticleScorer(
             ml_model='sklearn.svm.LinearSVR',
             use_cols=['1', '2'],
-        ).fit(dbase_fit_fname)
-        scores = model.predict(dbase_eval_fname)
+        ).fit(fit_data)
+        scores = model.predict(eval_data)
         model.save(model_fname)
+
+        # check post-save scores
+        scores1 = model.predict(eval_data)
+        assert(len(scores) == len(scores1))
+        assert((scores == scores1).all())
 
         # load model from file, get scores
         model2 = ArticleScorer.load(model_fname)
-        scores2 = model2.predict(dbase_eval_fname)
+        scores2 = model2.predict(eval_data)
 
         # check results
         assert(len(scores) == len(scores2))
@@ -84,8 +78,6 @@ def test_io():
 
     # remove temporary file
     finally:
-        remove(dbase_fit_fname)
-        remove(dbase_eval_fname)
         remove(f'{model_fname}.bin')
         remove(f'{model_fname}.pickle')
 

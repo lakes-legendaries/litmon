@@ -4,12 +4,11 @@ from __future__ import annotations
 
 from importlib import import_module
 import pickle
-from random import random
 from typing import Any
 
 from nptyping import NDArray
 from numpy import array
-from pandas import DataFrame, read_csv
+from pandas import DataFrame
 from vhash import VHash
 
 
@@ -18,23 +17,13 @@ class ArticleScorer:
 
     This class vectorizes labeled (True/False, i.e. target/non-target) journal
     articles with :code:`vhash.VHash`, and then predicts scores with a machine
-    learning model (default :code:`sklearn.neural_network.MLPRegressor`).
-
-    This class is designed to work with large datasets that cannot be loaded
-    into memory all at once. During training, it iterates through a largely
-    unbalanced dataset and extracts a much smaller balanced fitting set. During
-    testing, it breaks the dataset into chunks and computes scores on each
-    chunk individually. To accomodate this behavior, it takes as arguments file
-    names instead of numpy arrays or dataframes.
+    learning model (default :code:`sklearn.svm.LinearSVR`).
 
     Parameters
     ----------
-    balance_ratio: float, optional, default=3
-        number negative (non-target) articles = number positive (target)
-        articles * :code:`balance_ratio`
-    chunk_size: int, optional, default=10E3
-        number of articles to process from :code:`dbase_fname` at once
-    ml_model: str, optional, default='sklearn.neural_network.MLPRegressor'
+    label_field: str, optional, default='label'
+        name of label field in dataframe used for fitting
+    ml_model: str, optional, default='sklearn.svm.LinearSVR'
         name of machine learning model to use. You can specify any machine
         learning model that is installed in your local environment, as long as
         it is compliant to the sklearn api.
@@ -66,9 +55,8 @@ class ArticleScorer:
         self,
         /,
         *,
-        balance_ratio: float = 3,
-        chunk_size: int = 10E3,
-        ml_model: str = 'sklearn.neural_network.MLPRegressor',
+        label_field: str = 'label',
+        ml_model: str = 'sklearn.svm.LinearSVR',
         ml_kwargs: dict = {},
         use_cols: list[str] = None,
         vhash_kwargs: dict = {},
@@ -87,20 +75,19 @@ class ArticleScorer:
             ]
 
         # save parameters
-        self._balance_ratio = balance_ratio
-        self._chunk_size = chunk_size
+        self._label_field = label_field
         self._ml_model = ml_model
         self._ml_kwargs = ml_kwargs
         self._use_cols = use_cols
         self._vhash_kwargs = vhash_kwargs
 
-    def fit(self, dbase_fname: str, /) -> ArticleScorer:
+    def fit(self, X: DataFrame, /) -> ArticleScorer:
         """Fit model
 
         Parameters
         ----------
-        dbase_fname: str
-            Name of database to use for fitting
+        X: DataFrame
+            data to use for fitting
 
         Returns
         -------
@@ -112,28 +99,9 @@ class ArticleScorer:
         ml_module, ml_class = self._ml_model.rsplit('.', maxsplit=1)
         ml_class = getattr(import_module(ml_module), ml_class)
 
-        # get article count
-        num_pos = 0
-        total = 0
-        for articles in read_csv(dbase_fname, chunksize=self._chunk_size):
-            total += articles.shape[0]
-            for _, article in articles.iterrows():
-                num_pos += article['label']
-
-        # get selection probability
-        prob_incl = self._balance_ratio * num_pos / total
-
-        # create dataset
-        fit_set = []
-        for articles in read_csv(dbase_fname, chunksize=self._chunk_size):
-            for _, article in articles.iterrows():
-                if article['label'] or random() < prob_incl:
-                    fit_set.append(article)
-        fit_set = DataFrame(fit_set)
-
         # get fitting text and labels
-        text = self._extract_text(fit_set)
-        labels = list(fit_set['label'].to_numpy())
+        text = self._extract_text(X)
+        labels = list(X[self._label_field].to_numpy())
 
         # train vectorizer
         self.vhash = VHash(**self._vhash_kwargs).fit(text, labels)
@@ -147,22 +115,22 @@ class ArticleScorer:
         # return
         return self
 
-    def fit_predict(self, dbase_fname: str, /) -> NDArray[(Any,), float]:
+    def fit_predict(self, X: DataFrame, /) -> NDArray[(Any,), float]:
         """Fit model, predict scores
 
         Parameters
         ----------
-        dbase_fname: str
-            Name of database to use for fitting
+        X: DataFrame
+            data to use for fitting and scoring
 
         Returns
         -------
         NDArray
-            Score for each article in :code:`dbase_fname`
+            Score for each article in :code:`X`
         """
-        return self.fit(dbase_fname).predict(dbase_fname)
+        return self.fit(X).predict(X)
 
-    def predict(self, dbase_fname: str, /) -> NDArray[(Any,), float]:
+    def predict(self, X: DataFrame, /) -> NDArray[(Any,), float]:
         """Predict scores for each article in :code:`dbase_fname`
 
         Parameters
@@ -175,12 +143,9 @@ class ArticleScorer:
         NDArray
             Score for each article in :code:`dbase_fname`
         """
-        pred = []
-        for articles in read_csv(dbase_fname, chunksize=self._chunk_size):
-            text = self._extract_text(articles)
-            vectorized = self.vhash.transform(text)
-            pred.extend(self.model.predict(vectorized))
-        return array(pred)
+        text = self._extract_text(X)
+        vectorized = self.vhash.transform(text)
+        return array(self.model.predict(vectorized))
 
     def save(self, fname: str, /):
         """Save instance to file
@@ -196,9 +161,11 @@ class ArticleScorer:
             Output file, without file extension
         """
         self.vhash.save(f'{fname}.bin')
+        X = self.vhash
         self.vhash = None
         pickle.dump(self, open(f'{fname}.pickle', 'wb'))
-        self.vhash = VHash.load(f'{fname}.bin')
+        self.vhash = X
+        # self.vhash = VHash.load(f'{fname}.bin')
 
     @classmethod
     def load(cls, fname: str, /) -> ArticleScorer:

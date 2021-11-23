@@ -5,7 +5,12 @@ from os import listdir, remove
 from os.path import basename, dirname, isfile, join
 import re
 
-from azure.storage.blob import BlobClient, BlobServiceClient, ContainerClient
+from azure.storage.blob import (
+    BlobClient,
+    BlobServiceClient,
+    ContainerClient,
+    ContentSettings,
+)
 
 
 class Azure:
@@ -15,32 +20,21 @@ class Azure:
     saved in :code:`secrets_fname`. If you don't have this file, contact the
     administrator of this package.
 
-    Parameters
-    ----------
-    public_container: str, optional, default='litmon'
-        public container for sharing results
-    private_container: str, optional, default='litmon-private'
-        private container for internal data files
-    secrets_fname: str, optional, default='secrets/azure'
-        file containing your Azure connection string
-
-    Attributes
-    ----------
-    client: BlobServiceClient
-        client for interfacing with Azure
+    This class has a robust command-line interface. Run with the :code:`-h`
+    flag for help.
     """
 
-    """Azure public container"""
     public_container: str = 'litmon'
+    """Azure public container"""
 
-    """Azure private container"""
     private_container: str = 'litmon-private'
+    """Azure private container"""
 
-    """Azure resource URL"""
     resource_url: str = 'https://mfoundation.blob.core.windows.net'
+    """Azure resource URL"""
 
-    """Connection string file name"""
     secrets_fname: str = 'secrets/azure'
+    """Connection string file name"""
 
     @classmethod
     def _connection_error(cls) -> str:
@@ -224,9 +218,18 @@ class Azure:
             else:
                 return
 
+        # check if is html file
+        if basename(file).rsplit('.')[-1] == 'html':
+            content_settings = ContentSettings(content_type='text/html')
+        else:
+            content_settings = None
+
         # upload file
         with open(file, 'rb') as data:
-            client.upload_blob(data)
+            client.upload_blob(
+                data,
+                content_settings=content_settings,
+            )
 
         # update directory listing
         if update_listing and not private:
@@ -292,7 +295,11 @@ class Azure:
                 )
 
         # upload directory listing
-        cls.upload(fname, update_listing=False)
+        cls.upload(
+            fname,
+            private=False,
+            update_listing=False
+        )
 
         # clean up
         remove(fname)
@@ -357,6 +364,9 @@ if __name__ == '__main__':
 
     # get action
     action = Azure.upload if args.upload else Azure.download
+
+    # set public / private
+    args.private = True if args.private else False
 
     # get kwargs
     kwargs = {

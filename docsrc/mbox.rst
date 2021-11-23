@@ -43,4 +43,13 @@ pmids to :code:`data/pmids.txt` (if you are using the standard configuration).
 API Reference
 *************
 
+Azure
+-----
+
+.. autoclass:: litmon.utils.cloud.Azure
+   :members: upload, download, public_container, private_container, resource_url, secrets_fname
+
+PubMedIDExtractor
+-----------------
+
 .. autoclass:: litmon.cli.mbox.PubMedIDExtractor

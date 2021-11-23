@@ -1,4 +1,4 @@
-from litmon import drange
+from litmon.utils import drange
 
 
 def test():

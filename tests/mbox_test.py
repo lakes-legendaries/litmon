@@ -1,11 +1,11 @@
 from os import remove
 
-from litmon import PubMedIDExtractor
+from litmon.cli import PubMedIDExtractor
 
 
 def test():
-    ifname = 'tests/dump.mbox'
-    ofname = 'tests/pmid.txt'
+    ifname = 'data/dump-test.mbox'
+    ofname = 'data/pmid-test.txt'
     line = 'sdsagbPMID: 12345678\nasdgsaewq PMID87654321 PMID7 PMI44444444'
     try:
         with open(ifname, 'w') as file:

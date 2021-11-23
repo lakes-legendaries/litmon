@@ -26,78 +26,77 @@ To do this, we use the :code:`pymed` package, which extracts the following field
 
 Not all fields are filled out for all articles.
 
-*****************
-Pulling Positives
-*****************
+For this article-identifying pipeline to work, you'll need both positive
+(target) and negative (non-target) journal articles. You'll need both of these
+in both fitting (training) and evaluation (testing) sets.
 
-Once you have a list of positive PubMed IDs (saved to :code:`data/pmids.txt`),
-you can pull the full corresponding article information from PubMed. While this
-isn't a required step in the modeling pipeline, it does give you a good look at
-the data.
-
-You can do this using the :code:`litmon.cli.pos` script:
-
-.. code-block:: bash
-
-   python litmon/cli/pos.py
-
-This constructs :class:`litmon.cli.pos.PositiveQuerier`, using the
-:code:`user` field from :code:`config/std.yaml`, and outputs the positive
-articles to :code:`data/positive_articles.csv` (if you are using the standard configuration).
-
-************************
-Building Train/Test Sets
-************************
-
-To train a model, you'll need both positive (target) and negative (non-target)
-articles. You'll need both of these in both fitting (training) and evaluation
-(testing) sets.
-
-To build a dataset, use the :code:`litmon.cli.dbase` module. This module uses
-a pre-defined PubMed query (specified in :code:`std/config.yaml`) that is
+To build datasets, use the :code:`litmon.cli.dbase` module. This module uses a
+pre-defined PubMed query (specified in :code:`std/config.yaml`) that is
 `supposed` to encompass all the positive articles. This query looks for
 keywords and topics relevant to the Methuselah Foundation's goals, but pulls a
 lot of false postives when it is run. (The people they hire to monitor the
 scientific literature actually use this query to pull tons of articles, and
-select the positive articles from there.) So, by pulling all artilces using
-this query, you're getting a true dataset that could work in a real-world
-scenario.
+select the positive articles from there.) So, by pulling all articles using
+this query, you're getting the real data that the Methuselah Foundation's
+employees use to find relavent articles (i.e. this is completely a real-world
+scenario).
 
-Each set consists of all articles that match the given query (specified in your
-config yaml file) within date bounds you set (also specified in your config
-yaml file). More details are given about configuration files on the
-:ref:`config` page.
+Databases are constructed on a month-to-month basis. E.g. If you are
+constructing fitting databases using the date range :code:`2020/01-2020/03`,
+you'll get three database files:
 
-The resulting database can be quite large (several gigabytes in size).
+#. :code:`data/2020-01-fit.csv`
+#. :code:`data/2020-02-fit.csv`
+#. :code:`data/2020-03-fit.csv`
 
-Training Set
-------------
+The date range can be set by modifying the :code:`date_range` variable in the
+:code:`fit_dates` and/or :code:`eval_dates` dictionary in
+:code:`config/std.yaml`.
 
-To build a training set, use:
+******************
+Training Databases
+******************
+
+Training databases are automatically balanced, using :code:`balance_ratio` in
+:class:`litmon.cli.dbase.DBaseBuilder`. E.g. if the :code:`balance_ratio` is 3,
+then each training databse will have 3 negative articles for every positive
+article. (The value for this can be overriden by adding :code:`balance_ratio`
+to the :code:`dbase_fit` dictionary in :code:`config/std.yaml`.)
+
+To build a training database, use:
 
 .. code-block:: bash
 
    python litmon/cli/dbase.py
 
 This constructs :class:`litmon.cli.dbase.DBaseBuilder`, using the
-:code:`query`, :code:`user`, and :code:`dbase_fit` fields from
-:code:`config/std.yaml`, and outputs the training database to
-:code:`data/dbase_fit.csv` (if you are using the standard configuration).
+:code:`query`, :code:`user`, :code:`fit_dates`, and :code:`dbase_fit` fields
+from :code:`config/std.yaml`, and outputs the training databases to
+:code:`data/*-fit.csv` files (if you are using the standard configuration).
 
+*****************
+Testing Databases
+*****************
 
-Testing Set
------------
-
-To build a training set, use:
+Testing databases are NOT balanced, but are otherwise similar to training
+databases. To construct testing databases, use:
 
 .. code-block:: bash
 
-   python litmon/cli/dbase.py -f query user dbase_eval
+   python litmon/cli/dbase_eval.py
 
 This constructs :class:`litmon.cli.dbase.DBaseBuilder`, using the
-:code:`query`, :code:`user`, and :code:`dbase_eval` fields from
-:code:`config/std.yaml`, and outputs the testing database to
-:code:`data/dbase_eval.csv` (if you are using the standard configuration).
+:code:`query`, :code:`user`, :code:`eval_dates`, and :code:`dbase_eval` fields
+from :code:`config/std.yaml`, and outputs the testing databases to
+:code:`data/*-eval.csv` (if you are using the standard configuration).
+
+.. note::
+
+   :code:`litmon/cli/dbase_eval.py` uses
+   :class:`~litmon.cli.dbase.DBaseBuilder` from :code:`litmon/cli/dbase.py`.
+   (It's a simple wrapper for :code:`DBaseBuilder` that defaults to the
+   :code:`eval_dates` and :code:`dbase_eval` fields, instead of the
+   :code:`fit_dates` and :code:`dbase_fit` fields.)
 
 *************
 API Reference
@@ -112,15 +111,7 @@ PubMedQuerier
 Date Parsing
 ------------
 
-.. autofunction:: litmon.utils.dates.get_date
-
-.. autofunction:: litmon.utils.dates.get_dates
-
-PositiveQuerier
----------------
-
-.. autoclass:: litmon.cli.pos.PositiveQuerier
-   :show-inheritance:
+.. autofunction:: litmon.utils.dates.drange
 
 DBaseBuilder
 ------------

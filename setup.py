@@ -20,6 +20,7 @@ if __name__ == '__main__':
 
         # requirements
         install_requires=[
+            'azure-storage-blob',
             'numpy',
             'nptyping',
             'pandas',

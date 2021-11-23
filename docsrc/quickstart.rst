@@ -14,12 +14,9 @@ about how these work, check out the :ref:`config` page. That page also
 discusses how the command-line interfaces are generated for each script,
 which should assist advanced users of this package.
 
-***************************
-Setting Up Your Environment
-***************************
-
-To use this package, you'll need to setup your python environment and generate
-or obtain the required data files.
+*************
+Prerequisites
+*************
 
 .. note::
 
@@ -36,20 +33,38 @@ or obtain the required data files.
       python -m pip install -r requirements.txt
 
 #. If you are not the original author of this package, please update the
-   :code:`user::email` field in :code:`config/std.yaml`. If you are not using
-   this package for its original purpose, please update the :code:`user::tool`
+   :code:`user: email` field in :code:`config/std.yaml`. If you are not using
+   this package for its original purpose, please update the :code:`user: tool`
    field. These can be set to any arbitrary value, and are supplied to the
    PubMed API on each query.
+
+#. This package has a tight integration with our Azure cloud: If any data files
+   are missing, then they are automatically downloaded just-in-time. To enable
+   this functionality, you'll need an Azure Storage connection string, which
+   you can obtain from the maintainer of this package. Place this string in
+   :code:`secrets/azure`.
+
+   The Azure integration is not requried for this pipeline to work: You can
+   generate all the files and run the pipeline end-to-end without accessing our
+   cloud. However, if the cloud integration is enabled, any of the following
+   programs can be run in any order, and the required input files will be
+   automatically pulled.
+
+**************************
+Obtaining Journal Articles
+**************************
 
 #. For this pipeline to work, you will need a list of positive (target)
    articles to use as training data.
    
-   The Methuselah Foundation has provided this data in the form of mailbox
-   dumps, where the PubMed IDs (PMIDs) are contained within text-based emails.
+   The Methuselah Foundation has provided this data in the form of electronic
+   mailbox dumps, where the PubMed IDs (PMIDs) are contained within text-based
+   emails.
 
-   Currently, two such files have been provided. Place these files in the data
-   folder, naming them :code:`dump1.mbox` and :code:`dump2.mbox`. (It does not
-   matter which is which.) Then, to extract these PMIDs, run:
+   Currently, two such files have been provided: :code:`dump1.mbox` and
+   :code:`dump2.mbox`. Place these files in the :code:`data` folder. (If you
+   are integrated with the Azure cloud, these files will be automatically
+   downloded as they are needed.) Then, to extract these PMIDs, run:
 
    .. code-block:: bash
 
@@ -63,40 +78,53 @@ or obtain the required data files.
 
    For more information, check out the :ref:`mbox` page.
 
-#. (Optional) To pull all the data associated with each positive article, run:
+#. Once you have a list of positive articles, you can use that list to build a
+   database of training articles.
 
-   .. code-block:: bash
+   This package is configured to build databases on a month-to-month basis: For
+   example, if you want to build a database running from January through March
+   of 2020, this database will be output to 3 files, one for each month.
 
-      python litmon/cli/pos.py
+   You can specify the included months in the :code:`fit_dates: date_range`
+   variable in :code:`config/std.yaml`. Then, you can build the databases with:
+   
+   Each database file will be balanced to a set ratio between negative and
+   positive articles.
 
-   This will pull the positive articles using the :code:`pymed` package, saving
-   them to :code:`data/positive_articles.csv`.
-
-   For more information, check out the :ref:`dbase` page.
-
-*******************
-Training Your Model
-*******************
-
-Once you've set up your environment, you'll need to train a model to
-discriminate between positive (target) and negative (non-target) articles.
-
-#. First, you'll need to build a database of positive and negative articles,
-   using the pmid list you created (above). Set the date bounds of your
-   database by specifying the :code:`min_date` and :code:`max_date` (in the
-   :code:`dbase_fit` dictionary) in your :code:`config/std.yaml` file. Then,
-   build the database with:
+   To generate your databses, run:
 
    .. code-block:: bash
 
       python litmon/cli/dbase.py
    
-   This will output your database to :code:`data/dbase_fit.csv`. Progress will
-   be logged to :code:`logs/dbase_fit.log`.
+   This will output your databases to :code:`data/*-fit.csv` files. (E.g. The
+   fitting data for Januaray 2020 will be output to
+   :code:`data/2020-01-fit.csv`.)
 
    For more information, check out the :ref:`dbase` page.
 
-#. Next, train your model with:
+#. After building a database of training articles, you will then need to build
+   a database of testing articles. This is similar to the previous step, but
+   the database will NOT be balanced.
+
+   You can specify the included months in the :code:`eval_dates: date_range`
+   variable. Then, you can build the databases with:
+
+   .. code-block:: bash
+
+      python litmon/cli/dbase_eval.py
+   
+   This will output your databases to :code:`data/*-eval.csv` files. (E.g. The
+   evaluation data for February 2020 will be output to
+   :code:`data/2020-02-eval.csv`.)
+   
+   For more information, check out the :ref:`dbase` page.
+
+***************************
+Identifying Target Articles
+***************************
+
+#. To train a model for identifying positive (target) articles, run:
 
    .. code-block:: bash
 
@@ -107,43 +135,15 @@ discriminate between positive (target) and negative (non-target) articles.
 
    For more information, check out the :ref:`model` page.
 
-***************************
-Identifying Target Articles
-***************************
-
-Now that you've trained your model, you can use it to identify relevant
-articles in the scientific literature.
-
-#. First, build a database of articles to use your trained model on. The date
-   bounds for this article can be set in the :code:`config/std.yaml` file, by
-   modifying the :code:`min_date` and :code:`max_date` in the
-   :code:`dbase_eval` dictionary. Create this database with:
-
-   .. code-block:: bash
-
-      python litmon/cli/dbase.py -f query user dbase_eval
-   
-   This will output your database to :code:`data/dbase_eval.csv`. Progress will
-   be logged to :code:`logs/dbase_eval.log`.
-
-   For more information, check out the :ref:`dbase` page.
-
-#. Next, score the articles in your databse with:
+#. To identify positive articles in testing data, run:
 
    .. code-block:: bash
 
       python litmon/cli/eval.py
-   
-   This will output scores to :code:`data/scores.npy`.
 
-   For more information, check out the :ref:`model` page.
-
-#. Finally, write the most relevant articles to file with:
-
-   .. code-block:: bash
-
-      python litmon/cli/rez.py
-
-   The most relevant articles will be written to :code:`data/results.xlsx`.
+   This script uses the same evaluation article date range as the
+   :code:`dbase_eval` script. The most relevant articles for each month will be
+   written to :code:`data/*-results.xlsx` (E.g. The results data for February
+   2020 will be output to :code:`data/2020-02-results.csv`.)
 
    For more information, check out the :ref:`model` page.

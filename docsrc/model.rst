@@ -8,45 +8,12 @@ Once you have a training dataset, you can build up a model that differentiates
 between relevant (target/positive) and irrelevant (non-target/negative)
 articles. This is done with the :class:`litmon.model.ArticleScorer` class.
 
-When you're training this class, the training set is downsampled. Articles are
-included in the training set iff:
-
-#. They are positive, or
-
-#. If they are selected through the equation
-   
-   .. code-block:: python
-
-      include_article = random() < num_positive / total * balance_ratio
-   
-   where:
-   
-      #. :code:`include_article` is whether an article is included
-
-      #. :code:`random()` is a randomly-selected number from 0-1
-
-      #. :code:`num_positive` is the total number of positive articles in
-         the database before the cutoff date
-
-      #. :code:`total` is the total number of articles in the database
-         before the cutoff date
-
-      #. :code:`balance_ratio` is an arbitrarily-chosen ratio (default=3)
-
-This creates a set of articles that are reasonably-balanced data set for training.
-
-Articles are then vectorized using the `vhash
-<https://lakes-legendaries.github.io/vhash/>`_ package.
-
-Once all fitting articles have been vectorized, we build and train a machine
-learning model to find the articles most relevant to aging research. The
-default model to use is :code:`sklearn.network.MLPRegressor`, but you can
+This model vectorizes text documents using the `vhash
+<https://lakes-legendaries.github.io/vhash/>`_ package. Then, this model uses a
+machine learning (ML) model to find the articles most relevant to aging
+research. The default ML model is :code:`sklearn.svm.LinearSVR`, but you can
 specify any import-able machine learning model that is compliant to the sklearn
 api.
-
-Finally, after training the ML model, all articles in the evaluation set can be
-vectorized, and then scored via the ML model. The top-scoring models can then
-be written to file as the final result of this pipeline.
 
 ******************
 Training the Model
@@ -58,15 +25,15 @@ To train the article-scoring model, run:
 
    python litmon/cli/fit.py
 
-This constructs :class:`litmon.cli.fit.ModelFitter` (training on
-:code:`data/dbase_fit.csv`), and outputs the trained model to
-:code:`data/model.bin` and :code:`data/model.pickle` (if you are using the
-standard configuration). Both of these files are required for the model to be
-loaded back in.
+This constructs :class:`litmon.cli.fit.ModelFitter`, using the
+:code:`fit_dates` and :code:`fit` fields from :code:`config/std.yaml`, and
+outputs the trained model to :code:`data/model.bin` and
+:code:`data/model.pickle` (if you are using the standard configuration). Both
+of these files are required for the model to be loaded back in.
 
-*********************************
-Using the model to score articles
-*********************************
+********************
+Identifying Articles
+********************
 
 To use a previously-trained article-scoring model to score new articles, run:
 
@@ -74,28 +41,14 @@ To use a previously-trained article-scoring model to score new articles, run:
 
    python litmon/cli/eval.py
 
-This constructs :class:`litmon.cli.eval.ModelUser`, and outputs the scores for
-the evaluation dataset (:code:`data/dbase_eval.csv`) to :code:`data/scores.npy`
-(if you are using the standard configuration).
-
-*****************************
-Identifying relevant articles
-*****************************
-
-To write the top-scoring (most relevant) articles to file, use
-
-.. code-block:: bash
-
-   python litmon/cli/rez.py
-
-This constructs :class:`litmon.cli.rez.ResultsWriter`, and outputs the most
-relevant articles to :code:`data/results.csv` and :code:`data/results.xlsx`.
-(We recommend using the :code:`.xlsx` file because it will be formatted more
-nicely.)
+This constructs :class:`litmon.cli.eval.ModelUser`, using the
+:code:`eval_dates` field from :code:`config/std.yaml`, and outputs the most
+relevant articles to :code:`data/*-results.xlsx`, where there is one
+:code:`data/*-results.xlsx` file for each :code:`data/*-eval.csv` dataset.
 
 The number of articles written can be customized in the :code:`config/std.yaml`
-file (e.g. by adding :code:`rez: {count: 100}` to :code:`config/std.yaml`
-and calling the above script with the :code:`-f rez` flag).
+file by adding :code:`eval: {count: 100}` to :code:`config/std.yaml`
+and calling the above script with the :code:`-f eval_dates eval` flag.
 
 *************
 API Reference
@@ -116,8 +69,3 @@ ModelUser
 ---------
 
 .. autoclass:: litmon.cli.eval.ModelUser
-
-ResultsWriter
--------------
-
-.. autoclass:: litmon.cli.rez.ResultsWriter

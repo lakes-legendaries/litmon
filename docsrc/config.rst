@@ -17,7 +17,7 @@ with a code block that looks like:
 .. code-block:: python
 
    if __name__ == '__main__':
-       config = cli(...)
+       config: dict = cli(...)
        cls(**config)
 
 This methods creates a command-line interface (cli) that takes two parameters:
@@ -28,7 +28,8 @@ This methods creates a command-line interface (cli) that takes two parameters:
 
 Then, when the script containing the above code block is called from the
 command line, this function loads the configuration file and unpacks the listed
-fields as :code:`kwargs`.
+fields as :code:`kwargs`, which are used to construct :code:`cls` (more details
+on this below).
 
 ********
 Example
@@ -78,7 +79,7 @@ Non-dict args
 *************
 
 If any of the fields this function tries to unpack are NOT dictionaries,
-then the field is used as-is, e.g. if your yaml configuration file contains
+then the field is used as-is. E.g. if your yaml configuration file contains
 
 .. code-block:: python
 
@@ -105,11 +106,11 @@ Constructing cls
 The unpacked arguments are used to construct :code:`cls` in each
 :code:`litmon.cli` file. :code:`cls` is the only class in that given file.
 
-This is the extend of the command-line interface: Each :code:`cls` runs a
-script on construction. This is object-oriented code that is used as simple
-python scripts. The reason behind this is that then it is easy to inherit a new
-subclass that customizes the implementation, while still maintaining the same
-simple and clean command line interface.
+This is the extent of the command-line interface: Each :code:`cls` runs a class
+as a script on construction. This is object-oriented code that is used as
+simple python scripts. The reason behind this is that then it is easy to
+inherit a new subclass that customizes the implementation, while still
+maintaining the same simple and clean command line interface.
 
 *************
 API Reference

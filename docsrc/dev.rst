@@ -2,33 +2,33 @@
 Contributing to this Repo
 #########################
 
-#. All code should be error-free via :code:`flake8` linting.
+#. Coding standards
 
-#. Where applicable, use :code:`pytest`-compliant unit tests.
+   #. All code should be error-free via :code:`flake8` linting.
 
-#. Documentation is automatically built through GitHub Actions, published to
-   the :code:`docs` branch to keep the :code:`main` branch light.
+   #. Where applicable, use :code:`pytest`-compliant unit tests.
 
-   To test documentation, run :code:`docsrc/build`.
+#. Continuous Integration (CI)
 
-   Do NOT check in documentation to your branch.
+   #. Documentation is automatically built through GitHub Actions, published to
+      the :code:`docs` branch to keep the :code:`main` branch light.
 
-#. The version number is automatically updated through GitHub Actions on each
-   push to main. With each update, the main branch is tagged with the version
-   number.
+      To test documentation, run :code:`docsrc/build`.
 
-#. Pull requests are welcome.
+      Do NOT check in documentation to your branch.
+
+   #. The version number is automatically updated through GitHub Actions on each
+      push to main. With each update, the main branch is tagged with the version
+      number.
 
 #. If you are using this repo in support of the Methuselah Foundation, you may
    want to access our azure cloud, which is where we publish results and store
    private data files.
    
-   To interface with the azure cloud, you'll need two key files:
+   To interface with the azure cloud, you'll need a connection string, which
+   should be stored in your :code:`secrets/azure` file. Never check this file
+   in to your repo.
 
-   #. secrets/azure-public
-   #. secrets/azure-private
-   
-   The former lets you upload results, while the latter lets you interface with
-   private data files.
+   Contact the maintainer of package repo for credentials.
 
-   Contact the owner of this repo for credentials.
+#. Pull requests are welcome.

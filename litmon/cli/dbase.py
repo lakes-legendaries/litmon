@@ -9,9 +9,7 @@ from random import random, seed
 from pandas import DataFrame
 
 from litmon.query import PubMedQuerier
-from litmon.utils.cli import cli
-from litmon.utils.cloud import Azure
-from litmon.utils.dates import drange
+from litmon.utils import Azure, cli, drange
 
 
 class DBaseBuilder(PubMedQuerier):
@@ -23,7 +21,7 @@ class DBaseBuilder(PubMedQuerier):
         standard pubmed query for pulling these types of articles
     date_range: str
         months to query. Format: YYYY/mm-YYYY/mm
-    balance_ratio: float, optional, default=5
+    balance_ratio: float, optional, default=3
         number negative (non-target) articles = number positive (target)
         articles * :code:`balance_ratio`. To turn off, set to 0.
     dbase_dir: str, optional, default='data'
@@ -47,7 +45,7 @@ class DBaseBuilder(PubMedQuerier):
         query: str,
         date_range: str,
         *,
-        balance_ratio: float = 5,
+        balance_ratio: float = 3,
         dbase_dir: str = 'data',
         dbase_suffix: str = '',
         pmids_fname: str = 'data/pmids.txt',

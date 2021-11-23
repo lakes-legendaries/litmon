@@ -8,8 +8,7 @@ from typing import Any
 from nptyping import NDArray
 from numpy import unique
 
-from litmon.utils.cli import cli
-from litmon.utils.cloud import Azure
+from litmon.utils import Azure, cli
 
 
 class PubMedIDExtractor:
