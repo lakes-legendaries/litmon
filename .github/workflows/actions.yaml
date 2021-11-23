@@ -5,16 +5,17 @@ name: Post-push to main
 on:
   push:
     branches:
-      - main
+      - actions
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    environment: main-actions
+    environment: actions
     steps:
     - name: Checkout repo
       uses: actions/checkout@v2
       with:
+        ref: actions
         token: ${{ secrets.GIT_TOKEN }}
     - name: Setup Python
       uses: actions/setup-python@v2
@@ -54,10 +55,15 @@ jobs:
       run: |
         source .venv/bin/activate
         docsrc/build
+    - name: Push to actions
+      run: |
+        git push origin actions:actions
     - name: Push to main
       run: |
+        git push origin actions:main -f
+    - name: Push tag
+      run: |
         VERSION=$(grep version setup.py | grep -Po "\d+.\d+.\d+")
-        git push origin main:main
         git push origin $VERSION
     - name: Publish docs to GitHub pages (docs branch)
       run: |
