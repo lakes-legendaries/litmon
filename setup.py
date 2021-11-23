@@ -6,7 +6,7 @@ if __name__ == '__main__':
 
         # standard info
         name='litmon',
-        version='0.0.18',
+        version='0.0.19',
         description='literature monitoring project',
         author='Mike Powell PhD',
         author_email='mike@lakeslegendaries.com',
