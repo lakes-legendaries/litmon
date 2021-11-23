@@ -1,6 +1,4 @@
-# on each push to main, increment version & refresh docs
-
-name: Post-push to main
+name: Actions
 
 on:
   push:
@@ -69,4 +67,4 @@ jobs:
       run: |
         git add docs -f
         git commit docs -m "Updating Documentation"
-        git push origin main:docs -f
+        git push origin actions:docs -f
