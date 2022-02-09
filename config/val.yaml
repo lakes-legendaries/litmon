@@ -1,0 +1,47 @@
+user: {
+  email: mike@lakeslegendaries.com,
+  tool: org.mfoundation.litmon,
+}
+eval_dates: {
+  date_range: 2021/01-2022/01,
+}
+dbase_eval: {
+  dbase_suffix: -eval,
+  balance_ratio: 0,
+}
+eval : {
+  include_missed: False,
+}
+query: >-
+  (english[la] OR hasabstract)
+  AND
+  (
+  biogeront*
+  OR "regenerative medicine"
+  OR "tissue engineering"
+  OR oxystero*
+  OR "7-ketocholesterol"
+  OR lipofus*
+  OR aging
+  OR ageing
+  OR mitochondri*
+  OR lysosom*
+  OR intein*
+  OR telomer*
+  OR longevity
+  OR glycation
+  OR (aggregat* NOT platelet)
+  OR amyloid*
+  OR synuclein
+  OR ("neurofibrillary tangles")
+  OR nft
+  OR nfts
+  OR ("lewy bodies")
+  OR ("inclusion bodies")
+  OR autophag*
+  OR immunosenescence
+  OR (integrase* NOT HIV)
+  OR (plasma AND redox)
+  )
+  AND
+  (2007 : 2025[dp])
