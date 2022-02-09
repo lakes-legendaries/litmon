@@ -70,6 +70,9 @@ class ModelUser:
         Azure.download(f'{model_fname}.pickle', private=True)
         model = ArticleScorer.load(model_fname)
 
+        # set flags
+        use_count = not thresh
+
         # process one month at a time
         for year, month in drange(date_range):
 
@@ -88,10 +91,10 @@ class ModelUser:
             articles.loc[:, 'score'] = scores
 
             # get indices of top-scoring articles
-            if not thresh and count >= articles.shape[0]:
+            if use_count and count >= articles.shape[0]:
                 keep_me = ones(articles.shape[0], dtype=bool)
             else:
-                if not thresh:
+                if use_count:
                     thresh = sort(scores)[-count]
                 keep_me = scores >= thresh
 
