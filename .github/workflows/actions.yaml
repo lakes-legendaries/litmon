@@ -26,6 +26,12 @@ jobs:
         pip install --upgrade pip
         pip install .
         pip install -r requirements.txt
+    - name: Make .ezazure file
+      env:
+        AZURE_TOKEN: ${{ secrets.AZURE_TOKEN }}
+      run: |
+        echo "connection_str: $AZURE_TOKEN" > .ezazure
+        echo "container: data" >> .ezazure
     - name: Test code
       run: |
         source .venv/bin/activate

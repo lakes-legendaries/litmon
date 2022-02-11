@@ -20,6 +20,7 @@ jobs:
         AZURE_TOKEN: ${{ secrets.AZURE_TOKEN }}
       run: |
         echo "connection_str: $AZURE_TOKEN" > .ezazure
+        echo "container: data" >> .ezazure
     - name: Run pipeline
       run: |
         cmd/live-pipeline
