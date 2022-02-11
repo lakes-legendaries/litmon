@@ -6,10 +6,11 @@ from copy import deepcopy
 from datetime import date, timedelta
 from random import random, seed
 
+from ezazure import Azure
 from pandas import DataFrame
 
 from litmon.query import PubMedQuerier
-from litmon.utils import Azure, cli, drange
+from litmon.utils import cli, drange
 
 
 class DBaseBuilder(PubMedQuerier):
@@ -62,7 +63,7 @@ class DBaseBuilder(PubMedQuerier):
         PubMedQuerier.__init__(self, **kwargs)
 
         # load positive pmids
-        Azure.download(pmids_fname, private=True)
+        Azure().download(pmids_fname)
         pmids = open(pmids_fname).read().splitlines()
 
         # get file header

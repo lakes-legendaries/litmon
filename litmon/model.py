@@ -101,10 +101,11 @@ class ArticleScorer:
 
         # get fitting text and labels
         text = self._extract_text(X)
-        labels = list(X[self._label_field].to_numpy())
+        labels = X[self._label_field].to_numpy()
 
         # train vectorizer
-        self.vhash = VHash(**self._vhash_kwargs).fit(text, labels)
+        cat_labels = list((labels >= 1).astype(int))
+        self.vhash = VHash(**self._vhash_kwargs).fit(text, cat_labels)
 
         # vectorize documents
         vectorized = self.vhash.transform(text)
@@ -165,7 +166,6 @@ class ArticleScorer:
         self.vhash = None
         pickle.dump(self, open(f'{fname}.pickle', 'wb'))
         self.vhash = X
-        # self.vhash = VHash.load(f'{fname}.bin')
 
     @classmethod
     def load(cls, fname: str, /) -> ArticleScorer:

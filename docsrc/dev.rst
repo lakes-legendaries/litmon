@@ -36,7 +36,7 @@ NEVER merge into the :code:`main` branch. Instead, merge into the
 #. The version number will be updated, and the repo will be
    tagged with the version number.
 
-#. All changes will be merged into:code:`main`.
+#. All changes will be merged into :code:`main`.
 
 *****************
 Cloud Integration
@@ -47,7 +47,7 @@ want to access our azure cloud, which is where we publish results and store
 private data files.
 
 To interface with the azure cloud, you'll need a connection string, which
-should be stored in your :code:`secrets/azure` file. Never check this file
-in to your repo.
+should be stored in your :code:`.ezazure` file. Never check this file in to
+your repo.
 
 Contact the maintainer of package repo for credentials.

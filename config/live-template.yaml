@@ -2,14 +2,32 @@ user: {
   email: mike@lakeslegendaries.com,
   tool: org.mfoundation.litmon,
 }
+mbox_fname: [
+  data/dump1.mbox,
+  data/dump2.mbox,
+]
+fit_dates: {
+  date_range: 2013/01-2018/12,
+}
+fback: {
+  fback_range: 2019/01-,
+}
 eval_dates: {
-  date_range: 2021/01-2022/01,
+  date_range:,
+}
+dbase_fit: {
+  dbase_suffix: -fit,
 }
 dbase_eval: {
   dbase_suffix: -eval,
   balance_ratio: 0,
 }
-eval : {
+fit: {
+  ml_kwargs: {
+    max_iter: 1000000,
+  }
+}
+eval: {
   include_missed: False,
 }
 query: >-

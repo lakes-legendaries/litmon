@@ -1,0 +1,25 @@
+name: Monthly Refresh
+
+on:
+  schedule:
+    - cron: '0 0 1 * *'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: actions
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v2
+    - name: Setup Python
+      uses: actions/setup-python@v2
+      with:
+          python-version: 3.9
+    - name: Make .ezazure file
+      env:
+        AZURE_TOKEN: ${{ secrets.AZURE_TOKEN }}
+      run: |
+        echo "connection_str: $AZURE_TOKEN" > .ezazure
+    - name: Run pipeline
+      run: |
+        cmd/live-pipeline

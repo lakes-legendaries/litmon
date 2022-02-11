@@ -1,10 +1,11 @@
 """Score journal articles in eval set"""
 
+from ezazure import Azure
 from numpy import ones, sort
 from pandas import DataFrame, ExcelWriter, read_csv
 
 from litmon.model import ArticleScorer
-from litmon.utils import Azure, cli, drange
+from litmon.utils import cli, drange
 
 
 class ModelUser:
@@ -65,9 +66,12 @@ class ModelUser:
         write_csv: bool = False,
         write_xlsx: bool = True,
     ):
+        # initialize azure client
+        azure = Azure()
+
         # load in model
-        Azure.download(f'{model_fname}.bin', private=True)
-        Azure.download(f'{model_fname}.pickle', private=True)
+        azure.download(f'{model_fname}.bin')
+        azure.download(f'{model_fname}.pickle')
         model = ArticleScorer.load(model_fname)
 
         # set flags
@@ -79,12 +83,22 @@ class ModelUser:
             # load in data
             dbase_fname = \
                 f'{dbase_dir}/{year:4d}-{month:02d}{dbase_suffix}.csv'
-            Azure.download(dbase_fname, private=True)
+            azure.download(dbase_fname)
             articles = read_csv(dbase_fname)
 
             # add feedback column
             articles.loc[:, 'feedback'] = \
                 ['' for _ in range(articles.shape[0])]
+
+            # add link column
+            articles.loc[:, 'link'] = \
+                ['' for _ in range(articles.shape[0])]
+            link_iloc = articles.columns.get_loc('link')
+            pmid_iloc = articles.columns.get_loc('pubmed_id')
+            for row in range(articles.shape[0]):
+                pmid = articles.iloc[row, pmid_iloc][0:8]
+                articles.iloc[row, link_iloc] = \
+                    f'https://pubmed.ncbi.nlm.nih.gov/{pmid}/'
 
             # score each article
             scores = model.predict(articles)
@@ -135,7 +149,7 @@ class ModelUser:
                 sheet_names.append('Missed Articles')
                 dfs.append(missed)
 
-            # write dfs to excelt
+            # write dfs to excel
             for sheet_name, df in zip(sheet_names, dfs):
 
                 # write data
@@ -172,6 +186,7 @@ class ModelUser:
             output df
         """
         order = [
+            'link',
             'title',
             'abstract',
             'keywords',

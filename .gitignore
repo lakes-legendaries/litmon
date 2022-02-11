@@ -1,31 +1,10 @@
-# azure
-azure/azcopy
-
-# build folders
-/build
-/*.egg-info
-
-# configs
-config/20*
-
-# data files
-/data*/*
-/logs/*
-
-# documents
-/docs
-
-# ide files
+/.ezazure
+/.venv*
 /.vscode
-
-# secrets
-secrets/*
-
-# test files
+/build
+/config/live.yaml
+/data/*
+/docs
+/*.egg-info
 **/__pycache__
-
-# virtual environments
-/.venv
-
-# .gitkeep
 !**/.gitkeep

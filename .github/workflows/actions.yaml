@@ -26,11 +26,6 @@ jobs:
         pip install --upgrade pip
         pip install .
         pip install -r requirements.txt
-    - name: Save secrets
-      env:
-        AZURE_TOKEN: ${{ secrets.AZURE_TOKEN }}
-      run: |
-        echo $AZURE_TOKEN > secrets/azure
     - name: Test code
       run: |
         source .venv/bin/activate

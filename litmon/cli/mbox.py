@@ -5,10 +5,11 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from ezazure import Azure
 from nptyping import NDArray
 from numpy import unique
 
-from litmon.utils import Azure, cli
+from litmon.utils import cli
 
 
 class PubMedIDExtractor:
@@ -36,7 +37,7 @@ class PubMedIDExtractor:
         # load mboxes
         mbox = []
         for fname in mbox_fname:
-            Azure.download(fname, private=True)
+            Azure().download(fname)
             mbox.extend(open(fname, 'r').readlines())
 
         # get pmids

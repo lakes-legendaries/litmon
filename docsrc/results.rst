@@ -13,7 +13,7 @@ algorithm found in the specified time periods.
 .. raw:: html
 
     <iframe
-        src="https://mfoundation.blob.core.windows.net/litmon/directory.html"
+        src="https://litmon.blob.core.windows.net/results/directory.html"
         height="150px"
         width="200px"
     >
@@ -64,11 +64,11 @@ larger number of articles being identified/included in the results files.
 Technical Details
 *****************
 
-For results from 2019/01 - 2020/12: Results were created through the
+For results from 2019/01 - 2021/12: Results were created through the
 :code:`config/std.yaml` script, which used a model that was trained on data
 from 2013/01/01 through 2017/12/31 (YYYY/mm/dd). This model was then used to
-identify the top-scoring articles from each month of 2019 and 2020.
+identify the top-scoring articles from each month of 2019-2021.
 
-For results from 2021/01 - 2022/01: We used the same model created through
-:code:`config/std.yaml`, but evaluated that model on data pulled through
-:code:`config/val.yaml`.
+For results from 2022/01 and beyond: The :code:`cmd/live-pipeline` script was
+used, which is triggered each month by the GitHub Actions
+:code:`.github/workflows/monthly.yaml`.

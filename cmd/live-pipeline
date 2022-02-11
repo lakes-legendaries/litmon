@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# exit on error
+set -e
+
+# auto clean-up
+trap "rm -rfd .venv-pipeline" EXIT KILL
+
+# install requirements
+python -m venv .venv-pipeline
+source .venv-pipeline/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+
+# generate config for current month
+python litmon/utils/genconf.py
+
+# download current month's articles
+python litmon/cli/dbase_eval.py -c config/live.yaml
+
+# train model using all data
+python litmon/cli/fit.py -c config/live.yaml -f fit_dates fit fback
+
+# find most relevant articles
+python litmon/cli/eval.py -c config/live.yaml -f eval_dates eval
+
+# upload to results page
+python -m ezazure --upload --container results --regex "data/.*-results.xlsx"
