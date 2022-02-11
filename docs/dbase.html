@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Building Databases &mdash; litmon  documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Identifying Relevant Articles" href="model.html" />
+    <link rel="prev" title="Getting Target PMIDs" href="mbox.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> litmon
+          </a>
+              <div class="version">
+                0.0.23
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">Understanding Config Files &amp; CLIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mbox.html">Getting Target PMIDs</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Building Databases</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#training-databases">Training Databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#testing-databases">Testing Databases</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#api-reference">API Reference</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#pubmedquerier">PubMedQuerier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#date-parsing">Date Parsing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dbasebuilder">DBaseBuilder</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="model.html">Identifying Relevant Articles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="results.html">Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev.html">Contributing to this Repo</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">litmon</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Building Databases</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/dbase.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="building-databases">
+<span id="dbase"></span><h1>Building Databases<a class="headerlink" href="#building-databases" title="Permalink to this headline"></a></h1>
+<p>This package contains utilities for pulling journal articles databases using
+the PubMed API.</p>
+<p>To do this, we use the <code class="code docutils literal notranslate"><span class="pre">pymed</span></code> package, which extracts the following fields for each article:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">abstract</span>
+<span class="n">authors</span>
+<span class="n">conclusions</span>
+<span class="n">copyrights</span>
+<span class="n">doi</span>
+<span class="n">journal</span>
+<span class="n">keywords</span>
+<span class="n">methods</span>
+<span class="n">publication_date</span>
+<span class="n">pubmed_id</span>
+<span class="n">results</span>
+<span class="n">title</span>
+</pre></div>
+</div>
+<p>Not all fields are filled out for all articles.</p>
+<p>For this article-identifying pipeline to work, you’ll need both positive
+(target) and negative (non-target) journal articles. You’ll need both of these
+in both fitting (training) and evaluation (testing) sets.</p>
+<p>To build datasets, use the <code class="code docutils literal notranslate"><span class="pre">litmon.cli.dbase</span></code> module. This module uses a
+pre-defined PubMed query (specified in <code class="code docutils literal notranslate"><span class="pre">std/config.yaml</span></code>) that is
+<cite>supposed</cite> to encompass all the positive articles. This query looks for
+keywords and topics relevant to the Methuselah Foundation’s goals, but pulls a
+lot of false postives when it is run. (The people they hire to monitor the
+scientific literature actually use this query to pull tons of articles, and
+select the positive articles from there.) So, by pulling all articles using
+this query, you’re getting the real data that the Methuselah Foundation’s
+employees use to find relavent articles (i.e. this is completely a real-world
+scenario).</p>
+<p>Databases are constructed on a month-to-month basis. E.g. If you are
+constructing fitting databases using the date range <code class="code docutils literal notranslate"><span class="pre">2020/01-2020/03</span></code>,
+you’ll get three database files:</p>
+<ol class="arabic simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">data/2020-01-fit.csv</span></code></p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">data/2020-02-fit.csv</span></code></p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">data/2020-03-fit.csv</span></code></p></li>
+</ol>
+<p>The date range can be set by modifying the <code class="code docutils literal notranslate"><span class="pre">date_range</span></code> variable in the
+<code class="code docutils literal notranslate"><span class="pre">fit_dates</span></code> and/or <code class="code docutils literal notranslate"><span class="pre">eval_dates</span></code> dictionary in
+<code class="code docutils literal notranslate"><span class="pre">config/std.yaml</span></code>.</p>
+<section id="training-databases">
+<h2>Training Databases<a class="headerlink" href="#training-databases" title="Permalink to this headline"></a></h2>
+<p>Training databases are automatically balanced, using <code class="code docutils literal notranslate"><span class="pre">balance_ratio</span></code> in
+<a class="reference internal" href="#litmon.cli.dbase.DBaseBuilder" title="litmon.cli.dbase.DBaseBuilder"><code class="xref py py-class docutils literal notranslate"><span class="pre">litmon.cli.dbase.DBaseBuilder</span></code></a>. E.g. if the <code class="code docutils literal notranslate"><span class="pre">balance_ratio</span></code> is 3,
+then each training databse will have 3 negative articles for every positive
+article. (The value for this can be overriden by adding <code class="code docutils literal notranslate"><span class="pre">balance_ratio</span></code>
+to the <code class="code docutils literal notranslate"><span class="pre">dbase_fit</span></code> dictionary in <code class="code docutils literal notranslate"><span class="pre">config/std.yaml</span></code>.)</p>
+<p>To build a training database, use:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python litmon/cli/dbase.py
+</pre></div>
+</div>
+<p>This constructs <a class="reference internal" href="#litmon.cli.dbase.DBaseBuilder" title="litmon.cli.dbase.DBaseBuilder"><code class="xref py py-class docutils literal notranslate"><span class="pre">litmon.cli.dbase.DBaseBuilder</span></code></a>, using the
+<code class="code docutils literal notranslate"><span class="pre">query</span></code>, <code class="code docutils literal notranslate"><span class="pre">user</span></code>, <code class="code docutils literal notranslate"><span class="pre">fit_dates</span></code>, and <code class="code docutils literal notranslate"><span class="pre">dbase_fit</span></code> fields
+from <code class="code docutils literal notranslate"><span class="pre">config/std.yaml</span></code>, and outputs the training databases to
+<code class="code docutils literal notranslate"><span class="pre">data/*-fit.csv</span></code> files (if you are using the standard configuration).</p>
+</section>
+<section id="testing-databases">
+<h2>Testing Databases<a class="headerlink" href="#testing-databases" title="Permalink to this headline"></a></h2>
+<p>Testing databases are NOT balanced, but are otherwise similar to training
+databases. To construct testing databases, use:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python litmon/cli/dbase_eval.py
+</pre></div>
+</div>
+<p>This constructs <a class="reference internal" href="#litmon.cli.dbase.DBaseBuilder" title="litmon.cli.dbase.DBaseBuilder"><code class="xref py py-class docutils literal notranslate"><span class="pre">litmon.cli.dbase.DBaseBuilder</span></code></a>, using the
+<code class="code docutils literal notranslate"><span class="pre">query</span></code>, <code class="code docutils literal notranslate"><span class="pre">user</span></code>, <code class="code docutils literal notranslate"><span class="pre">eval_dates</span></code>, and <code class="code docutils literal notranslate"><span class="pre">dbase_eval</span></code> fields
+from <code class="code docutils literal notranslate"><span class="pre">config/std.yaml</span></code>, and outputs the testing databases to
+<code class="code docutils literal notranslate"><span class="pre">data/*-eval.csv</span></code> (if you are using the standard configuration).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="code docutils literal notranslate"><span class="pre">litmon/cli/dbase_eval.py</span></code> uses
+<a class="reference internal" href="#litmon.cli.dbase.DBaseBuilder" title="litmon.cli.dbase.DBaseBuilder"><code class="xref py py-class docutils literal notranslate"><span class="pre">DBaseBuilder</span></code></a> from <code class="code docutils literal notranslate"><span class="pre">litmon/cli/dbase.py</span></code>.
+(It’s a simple wrapper for <code class="code docutils literal notranslate"><span class="pre">DBaseBuilder</span></code> that defaults to the
+<code class="code docutils literal notranslate"><span class="pre">eval_dates</span></code> and <code class="code docutils literal notranslate"><span class="pre">dbase_eval</span></code> fields, instead of the
+<code class="code docutils literal notranslate"><span class="pre">fit_dates</span></code> and <code class="code docutils literal notranslate"><span class="pre">dbase_fit</span></code> fields.)</p>
+</div>
+</section>
+<section id="api-reference">
+<h2>API Reference<a class="headerlink" href="#api-reference" title="Permalink to this headline"></a></h2>
+<section id="pubmedquerier">
+<h3>PubMedQuerier<a class="headerlink" href="#pubmedquerier" title="Permalink to this headline"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="litmon.query.PubMedQuerier">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">litmon.query.</span></span><span class="sig-name descname"><span class="pre">PubMedQuerier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">email</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tool</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_results</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#litmon.query.PubMedQuerier" title="Permalink to this definition"></a></dt>
+<dd><p>Base class for querying PubMed articles</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>email: str</strong></dt><dd><p>email of the user of this program. this is required by the PubMed api</p>
+</dd>
+<dt><strong>tool: str</strong></dt><dd><p>name of the program running this query. this is required by the PubMed
+api</p>
+</dd>
+<dt><strong>max_results: int, optional, default=1000</strong></dt><dd><p>Maximum number of PubMed articles retrieved in any single query.
+Required by the <code class="code docutils literal notranslate"><span class="pre">pymed.PubMed</span></code> tool</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Attributes</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>count: int</strong></dt><dd><p>total number of articles queried by this instance</p>
+</dd>
+<dt><strong>header: list[str]</strong></dt><dd><p>name of each field pulled from pubmed</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#litmon.query.PubMedQuerier.query" title="litmon.query.PubMedQuerier.query"><code class="xref py py-obj docutils literal notranslate"><span class="pre">query</span></code></a>(query, /)</p></td>
+<td><p>Query PubMed servers</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="litmon.query.PubMedQuerier.query">
+<span class="sig-name descname"><span class="pre">query</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">pandas.core.frame.DataFrame</span></span></span><a class="headerlink" href="#litmon.query.PubMedQuerier.query" title="Permalink to this definition"></a></dt>
+<dd><p>Query PubMed servers</p>
+<p>This function is encased in an infinite retry loop, which is necessary
+due to frequent connection interruptions or failures to properly
+download data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>query: str</strong></dt><dd><p>query to send to PubMed servers</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>DataFrame</dt><dd><p>resulting articles</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="date-parsing">
+<h3>Date Parsing<a class="headerlink" href="#date-parsing" title="Permalink to this headline"></a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="litmon.utils.dates.drange">
+<span class="sig-prename descclassname"><span class="pre">litmon.utils.dates.</span></span><span class="sig-name descname"><span class="pre">drange</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datestr</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list[tuple(int,</span> <span class="pre">int)]</span></span></span><a class="headerlink" href="#litmon.utils.dates.drange" title="Permalink to this definition"></a></dt>
+<dd><p>Transform datestring into list of dates</p>
+<p>Each date covered in datestr is unpacked so that its year/month is
+listed. E.g.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="bp">cls</span><span class="o">.</span><span class="n">drange</span><span class="p">(</span><span class="s1">&#39;2014/11-2015/01&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="p">[</span>
+    <span class="p">(</span><span class="mi">2014</span><span class="p">,</span> <span class="mi">11</span><span class="p">),</span>
+    <span class="p">(</span><span class="mi">2014</span><span class="p">,</span> <span class="mi">12</span><span class="p">),</span>
+    <span class="p">(</span><span class="mi">2015</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>datestr: str</strong></dt><dd><p>dates, in format YYYY/mm-YYYY/mm</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>drange: list[tuple(int, int)]</dt><dd><p>list of year/month combos for each year/month in <code class="code docutils literal notranslate"><span class="pre">datestr</span></code>.
+<code class="code docutils literal notranslate"><span class="pre">drange[0]=(year,</span> <span class="pre">month)</span></code> for the first month covered in
+datestr.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="dbasebuilder">
+<h3>DBaseBuilder<a class="headerlink" href="#dbasebuilder" title="Permalink to this headline"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="litmon.cli.dbase.DBaseBuilder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">litmon.cli.dbase.</span></span><span class="sig-name descname"><span class="pre">DBaseBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">query</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date_range</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">balance_ratio</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dbase_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'data'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dbase_suffix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pmids_fname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'data/pmids.txt'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">271828</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#litmon.cli.dbase.DBaseBuilder" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#litmon.query.PubMedQuerier" title="litmon.query.PubMedQuerier"><code class="xref py py-class docutils literal notranslate"><span class="pre">litmon.query.PubMedQuerier</span></code></a></p>
+<p>Build database of articles for each month</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>query: str</strong></dt><dd><p>standard pubmed query for pulling these types of articles</p>
+</dd>
+<dt><strong>date_range: str</strong></dt><dd><p>months to query. Format: YYYY/mm-YYYY/mm</p>
+</dd>
+<dt><strong>balance_ratio: float, optional, default=3</strong></dt><dd><p>number negative (non-target) articles = number positive (target)
+articles * <code class="code docutils literal notranslate"><span class="pre">balance_ratio</span></code>. To turn off, set to 0.</p>
+</dd>
+<dt><strong>dbase_dir: str, optional, default=’data’</strong></dt><dd><p>directory to output database files to.
+<code class="code docutils literal notranslate"><span class="pre">dbase_fname=f'{dbase_dir}/{year}-{month:02d}{dbase_suffix}.csv'</span></code></p>
+</dd>
+<dt><strong>dbase_suffix: str, optional, default=’’</strong></dt><dd><p>suffix appended to each output file. See <code class="code docutils literal notranslate"><span class="pre">dbase_dir</span></code></p>
+</dd>
+<dt><strong>pmids_fname: str, optional, default=’data/pmids.txt’</strong></dt><dd><p>file containing positive (target) pmids. This is used for labeling
+documents True/False.</p>
+</dd>
+<dt><strong>random_seed: int, optional, default=271828</strong></dt><dd><p>random seed for <code class="code docutils literal notranslate"><span class="pre">random.seed()</span></code>. Set to 0 to turn off</p>
+</dd>
+<dt><strong>verbose: bool, optional, default=True</strong></dt><dd><p>write running status to console</p>
+</dd>
+<dt><strong>**kwargs: Any</strong></dt><dd><p>Passed to base class <a class="reference internal" href="#litmon.query.PubMedQuerier" title="litmon.query.PubMedQuerier"><code class="xref py py-class docutils literal notranslate"><span class="pre">PubMedQuerier</span></code></a>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="mbox.html" class="btn btn-neutral float-left" title="Getting Target PMIDs" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="model.html" class="btn btn-neutral float-right" title="Identifying Relevant Articles" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021 Lake&#39;s Legendaries LLC.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

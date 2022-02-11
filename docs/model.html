@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Identifying Relevant Articles &mdash; litmon  documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Results" href="results.html" />
+    <link rel="prev" title="Building Databases" href="dbase.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> litmon
+          </a>
+              <div class="version">
+                0.0.23
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">Understanding Config Files &amp; CLIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mbox.html">Getting Target PMIDs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dbase.html">Building Databases</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Identifying Relevant Articles</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#training-the-model">Training the Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#identifying-articles">Identifying Articles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#api-reference">API Reference</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#articlescorer">ArticleScorer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#modelfitter">ModelFitter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#modeluser">ModelUser</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="results.html">Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev.html">Contributing to this Repo</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">litmon</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Identifying Relevant Articles</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/model.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="model">
+<span id="identifying-relevant-articles"></span><h1>Identifying Relevant Articles<a class="headerlink" href="#model" title="Permalink to this headline"></a></h1>
+<p>Once you have a training dataset, you can build up a model that differentiates
+between relevant (target/positive) and irrelevant (non-target/negative)
+articles. This is done with the <a class="reference internal" href="#litmon.model.ArticleScorer" title="litmon.model.ArticleScorer"><code class="xref py py-class docutils literal notranslate"><span class="pre">litmon.model.ArticleScorer</span></code></a> class.</p>
+<p>This model vectorizes text documents using the <a class="reference external" href="https://lakes-legendaries.github.io/vhash/">vhash</a> package. Then, this model uses a
+machine learning (ML) model to find the articles most relevant to aging
+research. The default ML model is <code class="code docutils literal notranslate"><span class="pre">sklearn.svm.LinearSVR</span></code>, but you can
+specify any import-able machine learning model that is compliant to the sklearn
+api.</p>
+<section id="training-the-model">
+<h2>Training the Model<a class="headerlink" href="#training-the-model" title="Permalink to this headline"></a></h2>
+<p>To train the article-scoring model, run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python litmon/cli/fit.py
+</pre></div>
+</div>
+<p>This constructs <a class="reference internal" href="#litmon.cli.fit.ModelFitter" title="litmon.cli.fit.ModelFitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">litmon.cli.fit.ModelFitter</span></code></a>, using the
+<code class="code docutils literal notranslate"><span class="pre">fit_dates</span></code> and <code class="code docutils literal notranslate"><span class="pre">fit</span></code> fields from <code class="code docutils literal notranslate"><span class="pre">config/std.yaml</span></code>, and
+outputs the trained model to <code class="code docutils literal notranslate"><span class="pre">data/model.bin</span></code> and
+<code class="code docutils literal notranslate"><span class="pre">data/model.pickle</span></code> (if you are using the standard configuration). Both
+of these files are required for the model to be loaded back in.</p>
+</section>
+<section id="identifying-articles">
+<h2>Identifying Articles<a class="headerlink" href="#identifying-articles" title="Permalink to this headline"></a></h2>
+<p>To use a previously-trained article-scoring model to score new articles, run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python litmon/cli/eval.py
+</pre></div>
+</div>
+<p>This constructs <a class="reference internal" href="#litmon.cli.eval.ModelUser" title="litmon.cli.eval.ModelUser"><code class="xref py py-class docutils literal notranslate"><span class="pre">litmon.cli.eval.ModelUser</span></code></a>, using the
+<code class="code docutils literal notranslate"><span class="pre">eval_dates</span></code> field from <code class="code docutils literal notranslate"><span class="pre">config/std.yaml</span></code>, and outputs the most
+relevant articles to <code class="code docutils literal notranslate"><span class="pre">data/*-results.xlsx</span></code>, where there is one
+<code class="code docutils literal notranslate"><span class="pre">data/*-results.xlsx</span></code> file for each <code class="code docutils literal notranslate"><span class="pre">data/*-eval.csv</span></code> dataset.</p>
+<p>The number of articles written can be customized in the <code class="code docutils literal notranslate"><span class="pre">config/std.yaml</span></code>
+file by adding <code class="code docutils literal notranslate"><span class="pre">eval:</span> <span class="pre">{count:</span> <span class="pre">100}</span></code> to <code class="code docutils literal notranslate"><span class="pre">config/std.yaml</span></code>
+and calling the above script with the <code class="code docutils literal notranslate"><span class="pre">-f</span> <span class="pre">eval_dates</span> <span class="pre">eval</span></code> flag.</p>
+</section>
+<section id="api-reference">
+<h2>API Reference<a class="headerlink" href="#api-reference" title="Permalink to this headline"></a></h2>
+<section id="articlescorer">
+<h3>ArticleScorer<a class="headerlink" href="#articlescorer" title="Permalink to this headline"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="litmon.model.ArticleScorer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">litmon.model.</span></span><span class="sig-name descname"><span class="pre">ArticleScorer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_field</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'label'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ml_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'sklearn.svm.LinearSVR'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ml_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_cols</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vhash_kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#litmon.model.ArticleScorer" title="Permalink to this definition"></a></dt>
+<dd><p>Score journal articles based on their similarity to a training set</p>
+<p>This class vectorizes labeled (True/False, i.e. target/non-target) journal
+articles with <code class="code docutils literal notranslate"><span class="pre">vhash.VHash</span></code>, and then predicts scores with a machine
+learning model (default <code class="code docutils literal notranslate"><span class="pre">sklearn.svm.LinearSVR</span></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>label_field: str, optional, default=’label’</strong></dt><dd><p>name of label field in dataframe used for fitting</p>
+</dd>
+<dt><strong>ml_model: str, optional, default=’sklearn.svm.LinearSVR’</strong></dt><dd><p>name of machine learning model to use. You can specify any machine
+learning model that is installed in your local environment, as long as
+it is compliant to the sklearn api.</p>
+</dd>
+<dt><strong>ml_kwargs: dict, optional, default={}</strong></dt><dd><p>passed to <code class="code docutils literal notranslate"><span class="pre">ml_model</span></code> on <code class="code docutils literal notranslate"><span class="pre">__init__()</span></code></p>
+</dd>
+<dt><strong>use_cols: list[str], optional, default=None</strong></dt><dd><p>Article columns to use. If None, use:</p>
+<ol class="arabic simple">
+<li><p>abstract</p></li>
+<li><p>authors</p></li>
+<li><p>conclusions</p></li>
+<li><p>journal</p></li>
+<li><p>keywords</p></li>
+<li><p>methods</p></li>
+<li><p>results</p></li>
+<li><p>title</p></li>
+</ol>
+</dd>
+<dt><strong>vhash_kwargs: dict, optional, default={}</strong></dt><dd><p>passed to <code class="code docutils literal notranslate"><span class="pre">vhash.VHash</span></code> on <code class="code docutils literal notranslate"><span class="pre">__init__()</span></code></p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Attributes</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>model: Type[ml_model]</strong></dt><dd><p>ml model for scoring</p>
+</dd>
+<dt><strong>vhash: vhash.VHash</strong></dt><dd><p>vectorizing hash table</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#litmon.model.ArticleScorer.fit" title="litmon.model.ArticleScorer.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X, /)</p></td>
+<td><p>Fit model</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#litmon.model.ArticleScorer.fit_predict" title="litmon.model.ArticleScorer.fit_predict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_predict</span></code></a>(X, /)</p></td>
+<td><p>Fit model, predict scores</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#litmon.model.ArticleScorer.load" title="litmon.model.ArticleScorer.load"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load</span></code></a>(fname, /)</p></td>
+<td><p>Load instance from file</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#litmon.model.ArticleScorer.predict" title="litmon.model.ArticleScorer.predict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict</span></code></a>(X, /)</p></td>
+<td><p>Predict scores for each article in <code class="code docutils literal notranslate"><span class="pre">dbase_fname</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#litmon.model.ArticleScorer.save" title="litmon.model.ArticleScorer.save"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save</span></code></a>(fname, /)</p></td>
+<td><p>Save instance to file</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="litmon.model.ArticleScorer.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pandas.core.frame.DataFrame</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#litmon.model.ArticleScorer" title="litmon.model.ArticleScorer"><span class="pre">litmon.model.ArticleScorer</span></a></span></span><a class="headerlink" href="#litmon.model.ArticleScorer.fit" title="Permalink to this definition"></a></dt>
+<dd><p>Fit model</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>X: DataFrame</strong></dt><dd><p>data to use for fitting</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>ArticleScorer</dt><dd><p>Calling instance</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="litmon.model.ArticleScorer.fit_predict">
+<span class="sig-name descname"><span class="pre">fit_predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pandas.core.frame.DataFrame</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">nptyping.types._ndarray.NDArray</span><span class="p"><span class="pre">[</span></span><span class="pre">typing.Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">nptyping.types._number.Float</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#litmon.model.ArticleScorer.fit_predict" title="Permalink to this definition"></a></dt>
+<dd><p>Fit model, predict scores</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>X: DataFrame</strong></dt><dd><p>data to use for fitting and scoring</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>NDArray</dt><dd><p>Score for each article in <code class="code docutils literal notranslate"><span class="pre">X</span></code></p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="litmon.model.ArticleScorer.load">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#litmon.model.ArticleScorer" title="litmon.model.ArticleScorer"><span class="pre">litmon.model.ArticleScorer</span></a></span></span><a class="headerlink" href="#litmon.model.ArticleScorer.load" title="Permalink to this definition"></a></dt>
+<dd><p>Load instance from file</p>
+<p>Fname should be a file root without extension (same as the argument you
+passed to <a class="reference internal" href="#litmon.model.ArticleScorer.save" title="litmon.model.ArticleScorer.save"><code class="xref py py-meth docutils literal notranslate"><span class="pre">save()</span></code></a>). This will load data from <code class="code docutils literal notranslate"><span class="pre">fname.bin</span></code> and
+<code class="code docutils literal notranslate"><span class="pre">fname.pickle</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>fname: str</strong></dt><dd><p>Input file, without file extension</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>ArticleScorer</dt><dd><p>loaded instance</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="litmon.model.ArticleScorer.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pandas.core.frame.DataFrame</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">nptyping.types._ndarray.NDArray</span><span class="p"><span class="pre">[</span></span><span class="pre">typing.Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">nptyping.types._number.Float</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#litmon.model.ArticleScorer.predict" title="Permalink to this definition"></a></dt>
+<dd><p>Predict scores for each article in <code class="code docutils literal notranslate"><span class="pre">dbase_fname</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>dbase_fname: str</strong></dt><dd><p>Name of database to use for fitting</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>NDArray</dt><dd><p>Score for each article in <code class="code docutils literal notranslate"><span class="pre">dbase_fname</span></code></p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="litmon.model.ArticleScorer.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#litmon.model.ArticleScorer.save" title="Permalink to this definition"></a></dt>
+<dd><p>Save instance to file</p>
+<p>This is necessary because <code class="code docutils literal notranslate"><span class="pre">vhash.VHash</span></code> is not picklable.</p>
+<p>This will actually save two files: <code class="code docutils literal notranslate"><span class="pre">fname.bin</span></code> and
+<code class="code docutils literal notranslate"><span class="pre">fname.pickle</span></code>. Both are required when using <a class="reference internal" href="#litmon.model.ArticleScorer.load" title="litmon.model.ArticleScorer.load"><code class="xref py py-meth docutils literal notranslate"><span class="pre">load()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>fname: str</strong></dt><dd><p>Output file, without file extension</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="modelfitter">
+<h3>ModelFitter<a class="headerlink" href="#modelfitter" title="Permalink to this headline"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="litmon.cli.fit.ModelFitter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">litmon.cli.fit.</span></span><span class="sig-name descname"><span class="pre">ModelFitter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">date_range</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fback_range</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dbase_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'data'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dbase_suffix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'-fit'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fback_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'data'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fback_optional</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fback_suffix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'-feedback'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_fname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'data/model'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#litmon.cli.fit.ModelFitter" title="Permalink to this definition"></a></dt>
+<dd><p>Train <a class="reference internal" href="#litmon.model.ArticleScorer" title="litmon.model.ArticleScorer"><code class="xref py py-class docutils literal notranslate"><span class="pre">litmon.model.ArticleScorer</span></code></a> on fitting articles</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>date_range: str</strong></dt><dd><p>months to use for training. Format: YYYY/mm-YYYY/mm</p>
+</dd>
+<dt><strong>fback_range: str, optional, default=None</strong></dt><dd><p>additional feedback files to use in training</p>
+</dd>
+<dt><strong>dbase_dir: str, optional, default=’data’</strong></dt><dd><p>directory to load database files from.
+<code class="code docutils literal notranslate"><span class="pre">dbase_fname=f'{dbase_dir}/{year}-{month:02d}{dbase_suffix}.csv'</span></code></p>
+</dd>
+<dt><strong>dbase_suffix: str, optional, default=’-fit’</strong></dt><dd><p>suffix for each database file. See <code class="code docutils literal notranslate"><span class="pre">dbase_dir</span></code></p>
+</dd>
+<dt><strong>fback_dir: str, optional, default=’data’</strong></dt><dd><p>directory to load feedback files from.
+<code class="code docutils literal notranslate"><span class="pre">fback_fname=f'{fback_dir}/{year}-{month:02d}{fback_suffix}.xlsx'</span></code></p>
+</dd>
+<dt><strong>fback_optional: bool, optional, default=True</strong></dt><dd><p>if True, and feedback file cannot be found / downloaded, then skip</p>
+</dd>
+<dt><strong>fback_suffix: str, optional, default=’-feedback’</strong></dt><dd><p>suffix for each feedback file. See <code class="code docutils literal notranslate"><span class="pre">fback_dir</span></code></p>
+</dd>
+<dt><strong>model_fname: str, optional, default=’data/model’</strong></dt><dd><p>Output filename for saving trained model to. This should NOT have a
+file extension, because a <code class="code docutils literal notranslate"><span class="pre">model_fname.bin</span></code> and a
+<code class="code docutils literal notranslate"><span class="pre">model_fname.pickle</span></code> file are created</p>
+</dd>
+<dt><strong>**kwargs: Any</strong></dt><dd><p>Passed to <a class="reference internal" href="#litmon.model.ArticleScorer" title="litmon.model.ArticleScorer"><code class="xref py py-class docutils literal notranslate"><span class="pre">litmon.model.ArticleScorer</span></code></a> on <code class="code docutils literal notranslate"><span class="pre">__init__</span></code></p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="modeluser">
+<h3>ModelUser<a class="headerlink" href="#modeluser" title="Permalink to this headline"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="litmon.cli.eval.ModelUser">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">litmon.cli.eval.</span></span><span class="sig-name descname"><span class="pre">ModelUser</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">date_range</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">30</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dbase_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'data'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dbase_suffix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'-eval'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_missed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_fname</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'data/model'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">results_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'data'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">results_suffix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'-results'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresh</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">write_csv</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">write_xlsx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#litmon.cli.eval.ModelUser" title="Permalink to this definition"></a></dt>
+<dd><p>Use trained <a class="reference internal" href="#litmon.model.ArticleScorer" title="litmon.model.ArticleScorer"><code class="xref py py-class docutils literal notranslate"><span class="pre">litmon.model.ArticleScorer</span></code></a> to score articles</p>
+<p>Articles with high scores are relevant to the mission of the Methuselah
+Foundation.</p>
+<p>Top-scoring articles are written to excel files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>date_range: str</strong></dt><dd><p>months to use for training. Format: YYYY/mm-YYYY/mm</p>
+</dd>
+<dt><strong>count: int, optional, default=30</strong></dt><dd><p>Write the top-scoring <code class="code docutils literal notranslate"><span class="pre">count</span></code> articles to file.
+If <code class="code docutils literal notranslate"><span class="pre">thresh</span></code> is specified, then this is ignored.</p>
+</dd>
+<dt><strong>dbase_dir: str, optional, default=’data’</strong></dt><dd><p>directory to load database files from.
+<code class="code docutils literal notranslate"><span class="pre">dbase_fname=f'{dbase_dir}/{year}-{month:02d}{dbase_suffix}.csv'</span></code></p>
+</dd>
+<dt><strong>dbase_suffix: str, optional, default=’-eval’</strong></dt><dd><p>suffix for each database file. See <code class="code docutils literal notranslate"><span class="pre">dbase_dir</span></code></p>
+</dd>
+<dt><strong>include_missed: bool, optional, default=True</strong></dt><dd><p>whether missing articles should be included in the output
+<code class="code docutils literal notranslate"><span class="pre">*.xlsx</span></code> file. The default value for this is expected to change
+in the future.</p>
+</dd>
+<dt><strong>model_fname: str, optional, default=’data/model’</strong></dt><dd><p>Input filename for saved trained model. This should NOT have a file
+extension, because a <code class="code docutils literal notranslate"><span class="pre">model_fname.bin</span></code> and a
+<code class="code docutils literal notranslate"><span class="pre">model_fname.pickle</span></code> file are loaded in.</p>
+</dd>
+<dt><strong>results_dir: str, optional, default=’data’</strong></dt><dd><p>directory to write results to.
+<code class="code docutils literal notranslate"><span class="pre">results_fname=f'{results_dir}/{year}-{month:02d}{results_suffix}.xlsx'</span></code></p>
+</dd>
+<dt><strong>results_suffix: str, optional, default=’-results’</strong></dt><dd><p>suffix for each results file. See <code class="code docutils literal notranslate"><span class="pre">results_dir</span></code></p>
+</dd>
+<dt><strong>thresh: float, optional, default=None</strong></dt><dd><p>If specified, then write all articles with score &gt;= <code class="code docutils literal notranslate"><span class="pre">thresh</span></code>
+(instead of the top <code class="code docutils literal notranslate"><span class="pre">count</span></code> articles)</p>
+</dd>
+<dt><strong>write_csv: bool, optional, default=False</strong></dt><dd><p>write results to csv file. fname will be <code class="code docutils literal notranslate"><span class="pre">results_fname</span></code>, as
+listed in <code class="code docutils literal notranslate"><span class="pre">results_dir</span></code>, but with a <code class="code docutils literal notranslate"><span class="pre">.csv</span></code> extension.</p>
+</dd>
+<dt><strong>write_xlsx: bool, optional, default=Treu</strong></dt><dd><p>write results to xlsx file</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">rearrange</span></code>(df, /)</p></td>
+<td><p>Rearrange columns, sort by scores</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="dbase.html" class="btn btn-neutral float-left" title="Building Databases" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="results.html" class="btn btn-neutral float-right" title="Results" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021 Lake&#39;s Legendaries LLC.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

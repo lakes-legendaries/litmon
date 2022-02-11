@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quickstart &mdash; litmon  documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Understanding Config Files &amp; CLIs" href="config.html" />
+    <link rel="prev" title="LITMON: Literature Monitoring Project" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> litmon
+          </a>
+              <div class="version">
+                0.0.23
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Quickstart</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#obtaining-journal-articles">Obtaining Journal Articles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#identifying-target-articles">Identifying Target Articles</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">Understanding Config Files &amp; CLIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mbox.html">Getting Target PMIDs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dbase.html">Building Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model.html">Identifying Relevant Articles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="results.html">Results</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dev.html">Contributing to this Repo</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">litmon</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Quickstart</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/quickstart.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="quickstart">
+<h1>Quickstart<a class="headerlink" href="#quickstart" title="Permalink to this headline"></a></h1>
+<p>This page provides a quick reference to the commands you’ll need to operate
+this package. For a more in-depth look at any of these operations, see the
+corresponding page of the documentation.</p>
+<p>This page covers three main topics related to operating this package: Setting
+up your environment, training your model, and identifying target articles.</p>
+<p>All of the programs discussed below use configuration files. To learn more
+about how these work, check out the <a class="reference internal" href="config.html#config"><span class="std std-ref">Understanding Config Files &amp; CLIs</span></a> page. That page also
+discusses how the command-line interfaces are generated for each script,
+which should assist advanced users of this package.</p>
+<section id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this headline"></a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This package was developed using <code class="code docutils literal notranslate"><span class="pre">python3.9.7</span></code> on <code class="code docutils literal notranslate"><span class="pre">Ubuntu</span>
+<span class="pre">20.04</span></code>. For this documentation, we’ve aliased <code class="code docutils literal notranslate"><span class="pre">python=python3.9</span></code>.</p>
+</div>
+<ol class="arabic">
+<li><p>Initialize your environment. We recommend using virtual environments.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python -m venv .venv
+<span class="nb">source</span> .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+</pre></div>
+</div>
+</li>
+<li><p>If you are not the original author of this package, please update the
+<code class="code docutils literal notranslate"><span class="pre">user:</span> <span class="pre">email</span></code> field in <code class="code docutils literal notranslate"><span class="pre">config/std.yaml</span></code>. If you are not using
+this package for its original purpose, please update the <code class="code docutils literal notranslate"><span class="pre">user:</span> <span class="pre">tool</span></code>
+field. These can be set to any arbitrary value, and are supplied to the
+PubMed API on each query.</p></li>
+<li><p>This package has a tight integration with our Azure cloud: If any data files
+are missing, then they are automatically downloaded just-in-time. To enable
+this functionality, you’ll need an Azure Storage connection string, which
+you can obtain from the maintainer of this package. Place this string in
+<code class="code docutils literal notranslate"><span class="pre">secrets/azure</span></code>.</p>
+<p>The Azure integration is not requried for this pipeline to work: You can
+generate all the files and run the pipeline end-to-end without accessing our
+cloud. However, if the cloud integration is enabled, any of the following
+programs can be run in any order, and the required input files will be
+automatically pulled.</p>
+</li>
+</ol>
+</section>
+<section id="obtaining-journal-articles">
+<h2>Obtaining Journal Articles<a class="headerlink" href="#obtaining-journal-articles" title="Permalink to this headline"></a></h2>
+<ol class="arabic">
+<li><p>For this pipeline to work, you will need a list of positive (target)
+articles to use as training data.</p>
+<p>The Methuselah Foundation has provided this data in the form of electronic
+mailbox dumps, where the PubMed IDs (PMIDs) are contained within text-based
+emails.</p>
+<p>Currently, two such files have been provided: <code class="code docutils literal notranslate"><span class="pre">dump1.mbox</span></code> and
+<code class="code docutils literal notranslate"><span class="pre">dump2.mbox</span></code>. Place these files in the <code class="code docutils literal notranslate"><span class="pre">data</span></code> folder. (If you
+are integrated with the Azure cloud, these files will be automatically
+downloded as they are needed.) Then, to extract these PMIDs, run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python litmon/cli/mbox.py
+</pre></div>
+</div>
+<p>This will save the extracted PMIDs into the <code class="code docutils literal notranslate"><span class="pre">data/pmids.txt</span></code> file.</p>
+<p>If you do NOT have access to the mailbox dump files, then you will need to
+develop your own list of positive PMIDs to use for training. Save these
+PMIDs to <code class="code docutils literal notranslate"><span class="pre">data/pmids.txt</span></code>, with one PMID on each line.</p>
+<p>For more information, check out the <a class="reference internal" href="mbox.html#mbox"><span class="std std-ref">Getting Target PMIDs</span></a> page.</p>
+</li>
+<li><p>Once you have a list of positive articles, you can use that list to build a
+database of training articles.</p>
+<p>This package is configured to build databases on a month-to-month basis: For
+example, if you want to build a database running from January through March
+of 2020, this database will be output to 3 files, one for each month.</p>
+<p>You can specify the included months in the <code class="code docutils literal notranslate"><span class="pre">fit_dates:</span> <span class="pre">date_range</span></code>
+variable in <code class="code docutils literal notranslate"><span class="pre">config/std.yaml</span></code>. Then, you can build the databases with:</p>
+<p>Each database file will be balanced to a set ratio between negative and
+positive articles.</p>
+<p>To generate your databses, run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python litmon/cli/dbase.py
+</pre></div>
+</div>
+<p>This will output your databases to <code class="code docutils literal notranslate"><span class="pre">data/*-fit.csv</span></code> files. (E.g. The
+fitting data for Januaray 2020 will be output to
+<code class="code docutils literal notranslate"><span class="pre">data/2020-01-fit.csv</span></code>.)</p>
+<p>For more information, check out the <a class="reference internal" href="dbase.html#dbase"><span class="std std-ref">Building Databases</span></a> page.</p>
+</li>
+<li><p>After building a database of training articles, you will then need to build
+a database of testing articles. This is similar to the previous step, but
+the database will NOT be balanced.</p>
+<p>You can specify the included months in the <code class="code docutils literal notranslate"><span class="pre">eval_dates:</span> <span class="pre">date_range</span></code>
+variable. Then, you can build the databases with:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python litmon/cli/dbase_eval.py
+</pre></div>
+</div>
+<p>This will output your databases to <code class="code docutils literal notranslate"><span class="pre">data/*-eval.csv</span></code> files. (E.g. The
+evaluation data for February 2020 will be output to
+<code class="code docutils literal notranslate"><span class="pre">data/2020-02-eval.csv</span></code>.)</p>
+<p>For more information, check out the <a class="reference internal" href="dbase.html#dbase"><span class="std std-ref">Building Databases</span></a> page.</p>
+</li>
+</ol>
+</section>
+<section id="identifying-target-articles">
+<h2>Identifying Target Articles<a class="headerlink" href="#identifying-target-articles" title="Permalink to this headline"></a></h2>
+<ol class="arabic">
+<li><p>To train a model for identifying positive (target) articles, run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python litmon/cli/fit.py
+</pre></div>
+</div>
+<p>Your model will be output to <code class="code docutils literal notranslate"><span class="pre">data/model.bin</span></code> and
+<code class="code docutils literal notranslate"><span class="pre">data/model.pickle</span></code>. (Both files are required for your model to run.)</p>
+<p>For more information, check out the <a class="reference internal" href="model.html#model"><span class="std std-ref">Identifying Relevant Articles</span></a> page.</p>
+</li>
+<li><p>To identify positive articles in testing data, run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python litmon/cli/eval.py
+</pre></div>
+</div>
+<p>This script uses the same evaluation article date range as the
+<code class="code docutils literal notranslate"><span class="pre">dbase_eval</span></code> script. The most relevant articles for each month will be
+written to <code class="code docutils literal notranslate"><span class="pre">data/*-results.xlsx</span></code> (E.g. The results data for February
+2020 will be output to <code class="code docutils literal notranslate"><span class="pre">data/2020-02-results.csv</span></code>.)</p>
+<p>For more information, check out the <a class="reference internal" href="model.html#model"><span class="std std-ref">Identifying Relevant Articles</span></a> page.</p>
+</li>
+</ol>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="LITMON: Literature Monitoring Project" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="config.html" class="btn btn-neutral float-right" title="Understanding Config Files &amp; CLIs" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021 Lake&#39;s Legendaries LLC.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

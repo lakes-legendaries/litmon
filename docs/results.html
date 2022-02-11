@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Results &mdash; litmon  documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Contributing to this Repo" href="dev.html" />
+    <link rel="prev" title="Identifying Relevant Articles" href="model.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> litmon
+          </a>
+              <div class="version">
+                0.0.23
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="config.html">Understanding Config Files &amp; CLIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mbox.html">Getting Target PMIDs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dbase.html">Building Databases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model.html">Identifying Relevant Articles</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Results</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#results-list">Results List</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tracking-fields">Tracking Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#baseline-comparison">Baseline Comparison</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#technical-details">Technical Details</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dev.html">Contributing to this Repo</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">litmon</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Results</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/results.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="results">
+<h1>Results<a class="headerlink" href="#results" title="Permalink to this headline"></a></h1>
+<section id="results-list">
+<h2>Results List<a class="headerlink" href="#results-list" title="Permalink to this headline"></a></h2>
+<p>Results from running this algorithm can be downloaded from any of the links
+below. These files list the top-scoring (most relevant) articles that the
+algorithm found in the specified time periods.</p>
+<iframe
+    src="https://litmon.blob.core.windows.net/results/directory.html"
+    height="150px"
+    width="200px"
+>
+</iframe><div class="line-block">
+<div class="line"><br /></div>
+</div>
+<p>Most fields in this document should be self-explanatory. If a field is empty,
+it’s because the information wasn’t available through the PubMed API.</p>
+</section>
+<section id="tracking-fields">
+<h2>Tracking Fields<a class="headerlink" href="#tracking-fields" title="Permalink to this headline"></a></h2>
+<p>Three fields are used for tracking model performance: <code class="code docutils literal notranslate"><span class="pre">score</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">label</span></code>, and <code class="code docutils literal notranslate"><span class="pre">feedback</span></code>.</p>
+<p>The <code class="code docutils literal notranslate"><span class="pre">score</span></code> field is the score assigned to the article by the model.
+Higher scores mean an article is more relevant. (This is the parameter that
+<code class="code docutils literal notranslate"><span class="pre">thresh</span></code> is checked against in <code class="xref py py-class docutils literal notranslate"><span class="pre">litmon.cli.rez.ResultsWriter</span></code>.)
+The highest-scoring articles are included in each results file.</p>
+<p>The <code class="code docutils literal notranslate"><span class="pre">label</span></code> field is whether an article was identified by the people
+hired by the Methuselah Foundation as being relevant to the foundation’s
+mission. (I.e. the label is <code class="code docutils literal notranslate"><span class="pre">True</span></code> iff the PMID of the article is
+included in <code class="code docutils literal notranslate"><span class="pre">data/pmids.txt</span></code>).</p>
+<p>The <code class="code docutils literal notranslate"><span class="pre">feedback</span></code> field is a place for a manual reviewer to provide feedback
+on whether they think the article is relevant. We recommend scoring articles on
+a 0-2 basis (0=reject, 1=include, 2=super relevant). Non-integer scores are OK.
+In the future, we hope to expand this package to train on this feedback field
+in addition to the provided pmid list.</p>
+</section>
+<section id="baseline-comparison">
+<h2>Baseline Comparison<a class="headerlink" href="#baseline-comparison" title="Permalink to this headline"></a></h2>
+<p>Some of the results files include a <code class="code docutils literal notranslate"><span class="pre">Missed</span> <span class="pre">Articlces</span></code> sheet, which lists
+all articles that were flagged by the people hired by the Methuselah
+Foundation, but were NOT identified by the model.</p>
+<p>The model can be made to identify/include any of these articles by increasing
+the <code class="code docutils literal notranslate"><span class="pre">count</span></code> variable or setting the <code class="code docutils literal notranslate"><span class="pre">thresh</span></code> variable in
+<a class="reference internal" href="model.html#litmon.cli.eval.ModelUser" title="litmon.cli.eval.ModelUser"><code class="xref py py-class docutils literal notranslate"><span class="pre">litmon.cli.eval.ModelUser</span></code></a>. Any significant change could lead to a much
+larger number of articles being identified/included in the results files.</p>
+</section>
+<section id="technical-details">
+<h2>Technical Details<a class="headerlink" href="#technical-details" title="Permalink to this headline"></a></h2>
+<p>For results from 2019/01 - 2021/12: Results were created through the
+<code class="code docutils literal notranslate"><span class="pre">config/std.yaml</span></code> script, which used a model that was trained on data
+from 2013/01/01 through 2017/12/31 (YYYY/mm/dd). This model was then used to
+identify the top-scoring articles from each month of 2019-2021.</p>
+<p>For results from 2022/01 and beyond: The <code class="code docutils literal notranslate"><span class="pre">cmd/live-pipeline</span></code> script was
+used, which is triggered each month by the GitHub Actions
+<code class="code docutils literal notranslate"><span class="pre">.github/workflows/monthly.yaml</span></code>.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="model.html" class="btn btn-neutral float-left" title="Identifying Relevant Articles" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="dev.html" class="btn btn-neutral float-right" title="Contributing to this Repo" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021 Lake&#39;s Legendaries LLC.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
